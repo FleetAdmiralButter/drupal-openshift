@@ -6,7 +6,7 @@ Forks, issues, pull requests welcome.
 Deploy with:
 ```
 oc new-project <your_project_name>
-oc new-app php~https://github.com/FleetAdmiralButter/drupal-openshift.git#master
+oc new-app centos/php-73-centos7:latest~https://github.com/FleetAdmiralButter/drupal-openshift.git#master
 ```
 
 ### Included Modules:
