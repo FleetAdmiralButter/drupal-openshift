@@ -9,7 +9,7 @@ use Drupal\KernelTests\KernelTestBase;
  *
  * @group views
  */
-class CacheableMetadataCalculationTest extends KernelTestBase {
+class CachableMetadataCalculationTest extends KernelTestBase {
 
   /**
    * The ID of the view used in the test.
@@ -72,21 +72,21 @@ class CacheableMetadataCalculationTest extends KernelTestBase {
     // metadata to be recalculated.
     $this->enableModules([self::TEST_MODULE]);
     $this->installConfig([self::TEST_MODULE]);
-    $this->assertCacheableMetadataHasBeenCalculated(FALSE);
+    $this->assertCachebleMetadataHasBeenCalculated(FALSE);
 
     // When a view is saved normally we have to recalculate the cacheability
     // metadata, since it is possible changes have been made to the view that
     // affect cacheability.
     $view = $this->entityTypeManager->getStorage('view')->load(self::TEST_VIEW_ID);
     $view->save();
-    $this->assertCacheableMetadataHasBeenCalculated(TRUE);
+    $this->assertCachebleMetadataHasBeenCalculated(TRUE);
     $this->resetState();
 
     // When a view is being saved due to config being synchronized, the
     // cacheability metadata doesn't change so it should not be recalculated.
     $view->setSyncing(TRUE);
     $view->save();
-    $this->assertCacheableMetadataHasBeenCalculated(FALSE);
+    $this->assertCachebleMetadataHasBeenCalculated(FALSE);
   }
 
   /**
@@ -96,7 +96,7 @@ class CacheableMetadataCalculationTest extends KernelTestBase {
    *   TRUE if it is expected that the cacheability metadata has been
    *   calculated. FALSE otherwise.
    */
-  protected function assertCacheableMetadataHasBeenCalculated($expected_result) {
+  protected function assertCachebleMetadataHasBeenCalculated($expected_result) {
     $this->state->resetCache();
     $this->assertEquals($expected_result, $this->state->get('views_test_cacheable_metadata_has_been_accessed'));
   }

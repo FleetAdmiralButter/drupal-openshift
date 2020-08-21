@@ -19,7 +19,7 @@ use Symfony\Component\Routing\Route;
  *   help = @Translation("Provides a test access plugin that reports when cacheable metadata is being calculated.")
  * )
  */
-class CacheableMetadataCalculationTest extends AccessPluginBase implements CacheableDependencyInterface {
+class CachableMetadataCalculationTest extends AccessPluginBase implements CacheableDependencyInterface {
 
   /**
    * The state service.
@@ -29,7 +29,7 @@ class CacheableMetadataCalculationTest extends AccessPluginBase implements Cache
   protected $state;
 
   /**
-   * Constructs a CacheableMetadataCalculationTest access plugin.
+   * Constructs a CachableMetadataCalculationTest access plugin.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
