@@ -1,12 +1,12 @@
 # Drupal 8.9 on OpenShift QuickStart
 =======
-Drupal 8.9.2 project ready to be deployed on OpenShift.
+Drupal 8.9.2 LTS project ready to be deployed on OpenShift.
 
 Deploy with:
+```
 oc new-app php~https://github.com/FleetAdmiralButter/drupal-openshift.git#master
-
+```
 ### ABOUT DRUPAL
-------------
 
 Drupal is an open source content management platform supporting a variety of
 websites ranging from personal weblogs to large community-driven websites. For
