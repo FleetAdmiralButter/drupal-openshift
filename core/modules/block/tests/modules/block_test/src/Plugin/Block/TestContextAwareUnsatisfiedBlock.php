@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\block_test\Plugin\Block\TestContextAwareUnsatisfiedBlock.
- */
-
 namespace Drupal\block_test\Plugin\Block;
 
 use Drupal\Core\Block\BlockBase;
@@ -15,7 +10,7 @@ use Drupal\Core\Block\BlockBase;
  * @Block(
  *   id = "test_context_aware_unsatisfied",
  *   admin_label = @Translation("Test context-aware unsatisfied block"),
- *   context = {
+ *   context_definitions = {
  *     "user" = @ContextDefinition("entity:foobar")
  *   }
  * )

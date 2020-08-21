@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\block\Plugin\DisplayVariant\BlockPageVariant.
- */
-
 namespace Drupal\block\Plugin\DisplayVariant;
 
 use Drupal\block\BlockRepositoryInterface;
@@ -103,8 +98,8 @@ class BlockPageVariant extends VariantBase implements PageVariantInterface, Cont
       $plugin_id,
       $plugin_definition,
       $container->get('block.repository'),
-      $container->get('entity.manager')->getViewBuilder('block'),
-      $container->get('entity.manager')->getDefinition('block')->getListCacheTags()
+      $container->get('entity_type.manager')->getViewBuilder('block'),
+      $container->get('entity_type.manager')->getDefinition('block')->getListCacheTags()
     );
   }
 
@@ -182,6 +177,7 @@ class BlockPageVariant extends VariantBase implements PageVariantInterface, Cont
       $build['content']['messages'] = [
         '#weight' => -1000,
         '#type' => 'status_messages',
+        '#include_fallback' => TRUE,
       ];
     }
 

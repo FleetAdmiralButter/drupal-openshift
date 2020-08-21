@@ -1,14 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Component\Utility\SortArrayTest.
- */
-
 namespace Drupal\Tests\Component\Utility;
 
-use Drupal\Tests\UnitTestCase;
 use Drupal\Component\Utility\SortArray;
+use Drupal\Tests\PhpunitCompatibilityTrait;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Tests the SortArray component.
@@ -17,7 +13,9 @@ use Drupal\Component\Utility\SortArray;
  *
  * @coversDefaultClass \Drupal\Component\Utility\SortArray
  */
-class SortArrayTest extends UnitTestCase {
+class SortArrayTest extends TestCase {
+
+  use PhpunitCompatibilityTrait;
 
   /**
    * Tests SortArray::sortByWeightElement() input against expected output.
@@ -30,7 +28,7 @@ class SortArrayTest extends UnitTestCase {
    *   The first input array for the SortArray::sortByWeightElement() method.
    * @param array $b
    *   The second input array for the SortArray::sortByWeightElement().
-   * @param integer $expected
+   * @param int $expected
    *   The expected output from calling the method.
    */
   public function testSortByWeightElement($a, $b, $expected) {
@@ -48,49 +46,49 @@ class SortArrayTest extends UnitTestCase {
    * @see \Drupal\Tests\Component\Utility\SortArrayTest::testSortByWeightElement()
    */
   public function providerSortByWeightElement() {
-    $tests = array();
+    $tests = [];
 
     // Weights set and equal.
-    $tests[] = array(
-      array('weight' => 1),
-      array('weight' => 1),
-      0
-    );
+    $tests[] = [
+      ['weight' => 1],
+      ['weight' => 1],
+      0,
+    ];
 
     // Weights set and $a is less (lighter) than $b.
-    $tests[] = array(
-      array('weight' => 1),
-      array('weight' => 2),
-      -1
-    );
+    $tests[] = [
+      ['weight' => 1],
+      ['weight' => 2],
+      -1,
+    ];
 
     // Weights set and $a is greater (heavier) than $b.
-    $tests[] = array(
-      array('weight' => 2),
-      array('weight' => 1),
-      1
-    );
+    $tests[] = [
+      ['weight' => 2],
+      ['weight' => 1],
+      1,
+    ];
 
     // Weights not set.
-    $tests[] = array(
-      array(),
-      array(),
-      0
-    );
+    $tests[] = [
+      [],
+      [],
+      0,
+    ];
 
     // Weights for $b not set.
-    $tests[] = array(
-      array('weight' => 1),
-      array(),
-      1
-    );
+    $tests[] = [
+      ['weight' => 1],
+      [],
+      1,
+    ];
 
     // Weights for $a not set.
-    $tests[] = array(
-      array(),
-      array('weight' => 1),
-      -1
-    );
+    $tests[] = [
+      [],
+      ['weight' => 1],
+      -1,
+    ];
 
     return $tests;
   }
@@ -106,7 +104,7 @@ class SortArrayTest extends UnitTestCase {
    *   The first input array for the SortArray::sortByWeightProperty() method.
    * @param array $b
    *   The second input array for the SortArray::sortByWeightProperty().
-   * @param integer $expected
+   * @param int $expected
    *   The expected output from calling the method.
    */
   public function testSortByWeightProperty($a, $b, $expected) {
@@ -124,49 +122,49 @@ class SortArrayTest extends UnitTestCase {
    * @see \Drupal\Tests\Component\Utility\SortArrayTest::testSortByWeightProperty()
    */
   public function providerSortByWeightProperty() {
-    $tests = array();
+    $tests = [];
 
     // Weights set and equal.
-    $tests[] = array(
-      array('#weight' => 1),
-      array('#weight' => 1),
-      0
-    );
+    $tests[] = [
+      ['#weight' => 1],
+      ['#weight' => 1],
+      0,
+    ];
 
     // Weights set and $a is less (lighter) than $b.
-    $tests[] = array(
-      array('#weight' => 1),
-      array('#weight' => 2),
-      -1
-    );
+    $tests[] = [
+      ['#weight' => 1],
+      ['#weight' => 2],
+      -1,
+    ];
 
     // Weights set and $a is greater (heavier) than $b.
-    $tests[] = array(
-      array('#weight' => 2),
-      array('#weight' => 1),
-      1
-    );
+    $tests[] = [
+      ['#weight' => 2],
+      ['#weight' => 1],
+      1,
+    ];
 
     // Weights not set.
-    $tests[] = array(
-      array(),
-      array(),
-      0
-    );
+    $tests[] = [
+      [],
+      [],
+      0,
+    ];
 
     // Weights for $b not set.
-    $tests[] = array(
-      array('#weight' => 1),
-      array(),
-      1
-    );
+    $tests[] = [
+      ['#weight' => 1],
+      [],
+      1,
+    ];
 
     // Weights for $a not set.
-    $tests[] = array(
-      array(),
-      array('#weight' => 1),
-      -1
-    );
+    $tests[] = [
+      [],
+      ['#weight' => 1],
+      -1,
+    ];
 
     return $tests;
   }
@@ -182,7 +180,7 @@ class SortArrayTest extends UnitTestCase {
    *   The first input item for comparison.
    * @param array $b
    *   The second item for comparison.
-   * @param integer $expected
+   * @param int $expected
    *   The expected output from calling the method.
    */
   public function testSortByTitleElement($a, $b, $expected) {
@@ -200,42 +198,42 @@ class SortArrayTest extends UnitTestCase {
    * @see \Drupal\Tests\Component\Utility\SortArrayTest::testSortByTitleElement()
    */
   public function providerSortByTitleElement() {
-    $tests = array();
+    $tests = [];
 
     // Titles set and equal.
-    $tests[] = array(
-      array('title' => 'test'),
-      array('title' => 'test'),
-      0
-    );
+    $tests[] = [
+      ['title' => 'test'],
+      ['title' => 'test'],
+      0,
+    ];
 
     // Title $a not set.
-    $tests[] = array(
-      array(),
-      array('title' => 'test'),
-      -4
-    );
+    $tests[] = [
+      [],
+      ['title' => 'test'],
+      -4,
+    ];
 
     // Title $b not set.
-    $tests[] = array(
-      array('title' => 'test'),
-      array(),
-      4
-    );
+    $tests[] = [
+      ['title' => 'test'],
+      [],
+      4,
+    ];
 
     // Titles set but not equal.
-    $tests[] = array(
-      array('title' => 'test'),
-      array('title' => 'testing'),
-      -1
-    );
+    $tests[] = [
+      ['title' => 'test'],
+      ['title' => 'testing'],
+      -1,
+    ];
 
     // Titles set but not equal.
-    $tests[] = array(
-      array('title' => 'testing'),
-      array('title' => 'test'),
-      1
-    );
+    $tests[] = [
+      ['title' => 'testing'],
+      ['title' => 'test'],
+      1,
+    ];
 
     return $tests;
   }
@@ -251,7 +249,7 @@ class SortArrayTest extends UnitTestCase {
    *   The first input item for comparison.
    * @param array $b
    *   The second item for comparison.
-   * @param integer $expected
+   * @param int $expected
    *   The expected output from calling the method.
    */
   public function testSortByTitleProperty($a, $b, $expected) {
@@ -269,42 +267,42 @@ class SortArrayTest extends UnitTestCase {
    * @see \Drupal\Tests\Component\Utility\SortArrayTest::testSortByTitleProperty()
    */
   public function providerSortByTitleProperty() {
-    $tests = array();
+    $tests = [];
 
     // Titles set and equal.
-    $tests[] = array(
-      array('#title' => 'test'),
-      array('#title' => 'test'),
-      0
-    );
+    $tests[] = [
+      ['#title' => 'test'],
+      ['#title' => 'test'],
+      0,
+    ];
 
     // Title $a not set.
-    $tests[] = array(
-      array(),
-      array('#title' => 'test'),
-      -4
-    );
+    $tests[] = [
+      [],
+      ['#title' => 'test'],
+      -4,
+    ];
 
     // Title $b not set.
-    $tests[] = array(
-      array('#title' => 'test'),
-      array(),
-      4
-    );
+    $tests[] = [
+      ['#title' => 'test'],
+      [],
+      4,
+    ];
 
     // Titles set but not equal.
-    $tests[] = array(
-      array('#title' => 'test'),
-      array('#title' => 'testing'),
-      -1
-    );
+    $tests[] = [
+      ['#title' => 'test'],
+      ['#title' => 'testing'],
+      -1,
+    ];
 
     // Titles set but not equal.
-    $tests[] = array(
-      array('#title' => 'testing'),
-      array('#title' => 'test'),
-      1
-    );
+    $tests[] = [
+      ['#title' => 'testing'],
+      ['#title' => 'test'],
+      1,
+    ];
 
     return $tests;
   }
@@ -321,7 +319,8 @@ class SortArrayTest extends UnitTestCase {
    *   Actual comparison function return value.
    */
   protected function assertBothNegativePositiveOrZero($expected, $result) {
-    $this->assertTrue(is_numeric($expected) && is_numeric($result), 'Parameters are numeric.');
+    $this->assertIsNumeric($expected);
+    $this->assertIsNumeric($result);
     $this->assertTrue(($expected < 0 && $result < 0) || ($expected > 0 && $result > 0) || ($expected === 0 && $result === 0), 'Numbers are either both negative, both positive or both zero.');
   }
 

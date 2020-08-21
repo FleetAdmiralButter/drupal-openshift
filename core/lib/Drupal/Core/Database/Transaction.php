@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Database\Transaction.
- */
-
 namespace Drupal\Core\Database;
 
 /**
@@ -47,6 +42,8 @@ class Transaction {
    *
    * This is used to label the transaction savepoint. It will be overridden to
    * 'drupal_transaction' if there is no transaction depth.
+   *
+   * @var string
    */
   protected $name;
 
@@ -91,11 +88,12 @@ class Transaction {
    * transaction has been rolled back or the log messages will be rolled back
    * too.
    *
-   * @see \Drupal\Core\Database\Connection::rollback()
+   * @see \Drupal\Core\Database\Connection::rollBack()
    * @see watchdog_exception()
    */
-  public function rollback() {
+  public function rollBack() {
     $this->rolledBack = TRUE;
-    $this->connection->rollback($this->name);
+    $this->connection->rollBack($this->name);
   }
+
 }

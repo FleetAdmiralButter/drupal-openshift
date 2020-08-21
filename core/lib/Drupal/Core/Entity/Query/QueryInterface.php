@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Entity\Query\QueryInterface.
- */
-
 namespace Drupal\Core\Entity\Query;
 
 use Drupal\Core\Database\Query\AlterableInterface;
@@ -33,24 +28,51 @@ interface QueryInterface extends AlterableInterface {
    * and the Polish 'siema' within a 'greetings' text field:
    * @code
    *   $entity_ids = \Drupal::entityQuery($entity_type)
-   *     ->condition('greetings', 'merhaba', '=', 'tr');
-   *     ->condition('greetings.value', 'siema', '=', 'pl');
+   *     ->condition('greetings', 'merhaba', '=', 'tr')
+   *     ->condition('greetings.value', 'siema', '=', 'pl')
    *     ->execute();
-   *   $entity_ids = $query->execute();
    * @endcode
    *
    * @param $field
-   *   Name of the field being queried. It must contain a field name,
-   *   optionally followed by a column name. The column can be "entity" for
-   *   reference fields and that can be followed similarly by a field name
-   *   and so on. Some examples:
+   *   Name of the field being queried. It must contain a field name, optionally
+   *   followed by a column name. The column can be the reference property,
+   *   usually "entity", for reference fields and that can be followed
+   *   similarly by a field name and so on. Additionally, the target entity type
+   *   can be specified by appending the ":target_entity_type_id" to "entity".
+   *   Some examples:
    *   - nid
    *   - tags.value
    *   - tags
+   *   - tags.entity.name
+   *   - tags.entity:taxonomy_term.name
    *   - uid.entity.name
+   *   - uid.entity:user.name
    *   "tags" "is the same as "tags.value" as value is the default column.
    *   If two or more conditions have the same field names they apply to the
-   *   same delta within that field.
+   *   same delta within that field. In order to limit the condition to a
+   *   specific item a numeric delta should be added between the field name and
+   *   the column name.
+   *   @code
+   *   ->condition('tags.5.value', 'news')
+   *   @endcode
+   *   This will require condition to be satisfied on a specific delta of the
+   *   field. The condition above will require the 6th value of the field to
+   *   match the provided value. Further, it's possible to create a condition on
+   *   the delta itself by using '%delta'. For example,
+   *   @code
+   *   ->condition('tags.%delta', 5)
+   *   @endcode
+   *   will find only entities which have at least six tags. Finally, the
+   *   condition on the delta itself accompanied with a condition on the value
+   *   will require the value to appear in the specific delta range. For
+   *   example,
+   *   @code
+   *   ->condition('tags.%delta', 0, '>'))
+   *   ->condition('tags.%delta.value', 'news'))
+   *   @endcode
+   *   will only find the "news" tag if it is not the first value. It should be
+   *   noted that conditions on specific deltas and delta ranges are only
+   *   supported when querying content entities.
    * @param $value
    *   The value for $field. In most cases, this is a scalar and it's treated as
    *   case-insensitive. For more complex operators, it is an array. The meaning
@@ -72,7 +94,7 @@ interface QueryInterface extends AlterableInterface {
    *   and another does not they are not presumed to apply to the same
    *   translation.
    *
-   * @return \Drupal\Core\Entity\Query\QueryInterface
+   * @return $this
    * @see \Drupal\Core\Entity\Query\andConditionGroup
    * @see \Drupal\Core\Entity\Query\orConditionGroup
    */
@@ -85,18 +107,20 @@ interface QueryInterface extends AlterableInterface {
    *   Name of a field.
    * @param $langcode
    *   Language code (optional).
-   * @return \Drupal\Core\Entity\Query\QueryInterface
+   *
+   * @return $this
    */
   public function exists($field, $langcode = NULL);
 
   /**
    * Queries for an empty field.
    *
-   * @param $field.
+   * @param $field
    *   Name of a field.
    * @param $langcode
    *   Language code (optional).
-   * @return \Drupal\Core\Entity\Query\QueryInterface
+   *
+   * @return $this
    */
   public function notExists($field, $langcode = NULL);
 
@@ -110,7 +134,7 @@ interface QueryInterface extends AlterableInterface {
    *   An optional integer to distinguish between multiple pagers on one page.
    *   If not provided, one is automatically calculated.
    *
-   * @return \Drupal\Core\Entity\Query\QueryInterface
+   * @return $this
    *   The called object.
    */
   public function pager($limit = 10, $element = NULL);
@@ -118,7 +142,7 @@ interface QueryInterface extends AlterableInterface {
   /**
    * @param null $start
    * @param null $length
-   * @return \Drupal\Core\Entity\Query\QueryInterface
+   * @return $this
    *   The called object.
    */
   public function range($start = NULL, $length = NULL);
@@ -129,7 +153,7 @@ interface QueryInterface extends AlterableInterface {
    * @param string $direction
    * @param $langcode
    *   Language code (optional).
-   * @return \Drupal\Core\Entity\Query\QueryInterface
+   * @return $this
    *   The called object.
    */
   public function sort($field, $direction = 'ASC', $langcode = NULL);
@@ -139,7 +163,7 @@ interface QueryInterface extends AlterableInterface {
    *
    * For count queries, execute() returns the number entities found.
    *
-   * @return \Drupal\Core\Entity\Query\QueryInterface
+   * @return $this
    *   The called object.
    */
   public function count();
@@ -153,13 +177,13 @@ interface QueryInterface extends AlterableInterface {
    *   specify what to sort on. This can be an entity or a field as described
    *   in condition().
    *
-   * @return \Drupal\Core\Entity\Query\QueryInterface
+   * @return $this
    *   The called object.
    */
   public function tableSort(&$headers);
 
   /**
-   * @return \Drupal\Core\Entity\Query\QueryInterface
+   * @return $this
    *   The called object.
    */
   public function accessCheck($access_check = TRUE);
@@ -231,6 +255,17 @@ interface QueryInterface extends AlterableInterface {
    * @return $this
    */
   public function currentRevision();
+
+  /**
+   * Queries the latest revision.
+   *
+   * The latest revision is the most recent revision of an entity. This will be
+   * either the default revision, or a pending revision if one exists and it is
+   * newer than the default.
+   *
+   * @return $this
+   */
+  public function latestRevision();
 
   /**
    * Queries all the revisions.

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\locale\TranslationString.
- */
-
 namespace Drupal\locale;
 
 /**
@@ -47,7 +42,7 @@ class TranslationString extends StringBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct($values = array()) {
+  public function __construct($values = []) {
     parent::__construct($values);
     if (!isset($this->isNew)) {
       // We mark the string as not new if it is a complete translation.
@@ -63,7 +58,7 @@ class TranslationString extends StringBase {
    * @param bool $customized
    *   (optional) Whether the string is customized or not. Defaults to TRUE.
    *
-   * @return \Drupal\locale\TranslationString
+   * @return $this
    *   The called object.
    */
   public function setCustomized($customized = TRUE) {

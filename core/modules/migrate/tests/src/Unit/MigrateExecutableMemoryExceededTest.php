@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\migrate\Unit\MigrateExecutableMemoryExceededTest.
- */
-
 namespace Drupal\Tests\migrate\Unit;
 
 /**
@@ -17,14 +12,14 @@ class MigrateExecutableMemoryExceededTest extends MigrateTestCase {
   /**
    * The mocked migration entity.
    *
-   * @var \Drupal\migrate\Entity\MigrationInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\migrate\Plugin\MigrationInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $migration;
 
   /**
    * The mocked migrate message.
    *
-   * @var \Drupal\migrate\MigrateMessageInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\migrate\MigrateMessageInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $message;
 
@@ -40,12 +35,14 @@ class MigrateExecutableMemoryExceededTest extends MigrateTestCase {
    *
    * @var array
    */
-  protected $migrationConfiguration = array(
+  protected $migrationConfiguration = [
     'id' => 'test',
-  );
+  ];
 
   /**
-   * php.init memory_limit value.
+   * The php.ini memory_limit value.
+   *
+   * @var int
    */
   protected $memoryLimit = 10000000;
 
@@ -55,7 +52,7 @@ class MigrateExecutableMemoryExceededTest extends MigrateTestCase {
   protected function setUp() {
     parent::setUp();
     $this->migration = $this->getMigration();
-    $this->message = $this->getMock('Drupal\migrate\MigrateMessageInterface');
+    $this->message = $this->createMock('Drupal\migrate\MigrateMessageInterface');
 
     $this->executable = new TestMigrateExecutable($this->migration, $this->message);
     $this->executable->setStringTranslation($this->getStringTranslationStub());
@@ -68,12 +65,13 @@ class MigrateExecutableMemoryExceededTest extends MigrateTestCase {
    *   The second message to assert.
    * @param bool $memory_exceeded
    *   Whether to test the memory exceeded case.
-   * @param int $memory_usage_first
-   *   (optional) The first memory usage value.
-   * @param int $memory_usage_second
+   * @param int|null $memory_usage_first
+   *   (optional) The first memory usage value. Defaults to NULL.
+   * @param int|null $memory_usage_second
    *   (optional) The fake amount of memory usage reported after memory reclaim.
-   * @param int $memory_limit
-   *   (optional) The memory limit.
+   *   Defaults to NULL.
+   * @param int|null $memory_limit
+   *   (optional) The memory limit. Defaults to NULL.
    */
   protected function runMemoryExceededTest($message, $memory_exceeded, $memory_usage_first = NULL, $memory_usage_second = NULL, $memory_limit = NULL) {
     $this->executable->setMemoryLimit($memory_limit ?: $this->memoryLimit);
@@ -82,10 +80,14 @@ class MigrateExecutableMemoryExceededTest extends MigrateTestCase {
     if ($message) {
       $this->executable->message->expects($this->at(0))
         ->method('display')
-        ->with($this->stringContains('reclaiming memory'));
+        ->with($this->callback(function ($subject) {
+            return mb_stripos((string) $subject, 'reclaiming memory') !== FALSE;
+        }));
       $this->executable->message->expects($this->at(1))
         ->method('display')
-        ->with($this->stringContains($message));
+        ->with($this->callback(function ($subject) use ($message) {
+            return mb_stripos((string) $subject, $message) !== FALSE;
+        }));
     }
     else {
       $this->executable->message->expects($this->never())

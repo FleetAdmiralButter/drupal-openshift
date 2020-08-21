@@ -1,18 +1,16 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\database_test\Form\DatabaseTestForm.
- */
-
 namespace Drupal\database_test\Form;
 
+use Drupal\Core\Database\Database;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\user\Entity\User;
 
 /**
  * Form controller for database_test module.
+ *
+ * @internal
  */
 class DatabaseTestForm extends FormBase {
 
@@ -27,12 +25,12 @@ class DatabaseTestForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $header = array(
-      'username' => array('data' => t('Username'), 'field' => 'u.name'),
-      'status' => array('data' => t('Status'), 'field' => 'u.status'),
-    );
+    $header = [
+      'username' => ['data' => t('Username'), 'field' => 'u.name'],
+      'status' => ['data' => t('Status'), 'field' => 'u.status'],
+    ];
 
-    $query = db_select('users_field_data', 'u');
+    $query = Database::getConnection()->select('users_field_data', 'u');
     $query->condition('u.uid', 0, '<>');
     $query->condition('u.default_langcode', 1);
 
@@ -43,7 +41,7 @@ class DatabaseTestForm extends FormBase {
       ->extend('Drupal\Core\Database\Query\PagerSelectExtender')
       ->extend('Drupal\Core\Database\Query\TableSortExtender');
     $query
-      ->fields('u', array('uid'))
+      ->fields('u', ['uid'])
       ->limit(50)
       ->orderByHeader($header)
       ->setCountQuery($count_query);
@@ -51,22 +49,22 @@ class DatabaseTestForm extends FormBase {
       ->execute()
       ->fetchCol();
 
-    $options = array();
+    $options = [];
 
     foreach (User::loadMultiple($uids) as $account) {
-      $options[$account->id()] = array(
-        'title' => array('data' => array('#title' => $account->getUsername())),
-        'username' => $account->getUsername(),
-        'status' =>  $account->isActive() ? t('active') : t('blocked'),
-      );
+      $options[$account->id()] = [
+        'title' => ['data' => ['#title' => $account->getAccountName()]],
+        'username' => $account->getAccountName(),
+        'status' => $account->isActive() ? t('active') : t('blocked'),
+      ];
     }
 
-    $form['accounts'] = array(
+    $form['accounts'] = [
       '#type' => 'tableselect',
       '#header' => $header,
       '#options' => $options,
       '#empty' => t('No people available.'),
-    );
+    ];
 
     return $form;
   }

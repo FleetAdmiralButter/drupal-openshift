@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\config_test\Entity\ConfigQueryTest.
- */
-
 namespace Drupal\config_test\Entity;
 
 /**
@@ -21,6 +16,12 @@ namespace Drupal\config_test\Entity;
  *     }
  *   },
  *   config_prefix = "query",
+ *   config_export = {
+ *     "id",
+ *     "label",
+ *     "array",
+ *     "number",
+ *   },
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label"
@@ -43,6 +44,6 @@ class ConfigQueryTest extends ConfigTest {
    *
    * @var array
    */
-  public $array = array();
+  public $array = [];
 
 }

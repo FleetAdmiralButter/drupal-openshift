@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\comment\CommentStorageInterface.
- */
-
 namespace Drupal\comment;
 
 use Drupal\Core\Entity\EntityInterface;
@@ -80,6 +75,7 @@ interface CommentStorageInterface extends ContentEntityStorageInterface {
    *
    * @param \Drupal\comment\CommentInterface[] $comments
    *   An array of comment entities keyed by their ids.
+   *
    * @return array
    *   The entity ids of the passed comment entities' children as an array.
    */

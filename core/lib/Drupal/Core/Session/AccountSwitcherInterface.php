@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Session\AccountSwitcherInterface.
- */
-
 namespace Drupal\Core\Session;
 
 /**
@@ -24,7 +19,7 @@ interface AccountSwitcherInterface {
    * @param \Drupal\Core\Session\AccountInterface $account
    *   The account to switch to.
    *
-   * @return \Drupal\Core\Session\AccountSwitcherInterface
+   * @return $this
    *   $this.
    */
   public function switchTo(AccountInterface $account);
@@ -32,7 +27,7 @@ interface AccountSwitcherInterface {
   /**
    * Reverts to a previous account after switching.
    *
-   * @return \Drupal\Core\Session\AccountSwitcherInterface
+   * @return $this
    *   $this.
    *
    * @throws \RuntimeException

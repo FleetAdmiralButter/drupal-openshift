@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\aggregator\FeedInterface.
- */
-
 namespace Drupal\aggregator;
 
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -20,7 +15,7 @@ interface FeedInterface extends ContentEntityInterface {
    * @param string $title
    *   The short title of the feed.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setTitle($title);
@@ -39,7 +34,7 @@ interface FeedInterface extends ContentEntityInterface {
    * @param string $url
    *   A string containing the url of the feed.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setUrl($url);
@@ -58,7 +53,7 @@ interface FeedInterface extends ContentEntityInterface {
    * @param int $refresh
    *   The refresh rate of the feed in seconds.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setRefreshRate($refresh);
@@ -77,7 +72,7 @@ interface FeedInterface extends ContentEntityInterface {
    * @param int $checked
    *   The timestamp of the last refresh.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setLastCheckedTime($checked);
@@ -96,7 +91,7 @@ interface FeedInterface extends ContentEntityInterface {
    * @param int $queued
    *   The timestamp of the last refresh.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setQueuedTime($queued);
@@ -115,7 +110,7 @@ interface FeedInterface extends ContentEntityInterface {
    * @param string $link
    *   A string containing the parent website of the feed.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setWebsiteUrl($link);
@@ -134,7 +129,7 @@ interface FeedInterface extends ContentEntityInterface {
    * @param string $description
    *   The description of the feed.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setDescription($description);
@@ -153,7 +148,7 @@ interface FeedInterface extends ContentEntityInterface {
    * @param string $image
    *   An image URL.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setImage($image);
@@ -173,7 +168,7 @@ interface FeedInterface extends ContentEntityInterface {
    *   A string containing the calculated hash of the feed. Must contain
    *   US ASCII characters only.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setHash($hash);
@@ -192,7 +187,7 @@ interface FeedInterface extends ContentEntityInterface {
    * @param string $etag
    *   A string containing the entity tag HTTP response header.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setEtag($etag);
@@ -211,7 +206,7 @@ interface FeedInterface extends ContentEntityInterface {
    * @param int $modified
    *   The timestamp when the feed was modified.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    */
   public function setLastModified($modified);
@@ -222,7 +217,7 @@ interface FeedInterface extends ContentEntityInterface {
    * This will also reset the last checked and modified time of the feed and
    * save it.
    *
-   * @return \Drupal\aggregator\FeedInterface
+   * @return $this
    *   The class instance that this method is called on.
    *
    * @see \Drupal\aggregator\ItemsImporterInterface::delete()

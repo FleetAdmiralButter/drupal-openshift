@@ -1,13 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\TypedData\TypedDataInterface.
- */
-
 namespace Drupal\Core\TypedData;
-
-use Drupal\user;
 
 /**
  * Interface for typed data objects.
@@ -50,6 +43,7 @@ interface TypedDataInterface {
    * Gets the data value.
    *
    * @return mixed
+   *   The data value.
    */
   public function getValue();
 
@@ -75,6 +69,7 @@ interface TypedDataInterface {
    * Returns a string representation of the data.
    *
    * @return string
+   *   The string representation of the data.
    */
   public function getString();
 
@@ -104,7 +99,7 @@ interface TypedDataInterface {
    *   TRUE. If a property is updated from a parent object, set it to FALSE to
    *   avoid being notified again.
    *
-   * @return \Drupal\Core\TypedData\TypedDataInterface
+   * @return $this
    *   Returns itself to allow for chaining.
    */
   public function applyDefaultValue($notify = TRUE);
@@ -112,7 +107,7 @@ interface TypedDataInterface {
   /**
    * Returns the name of a property or item.
    *
-   * @return string
+   * @return string|int|null
    *   If the data is a property of some complex data, the name of the property.
    *   If the data is an item of a list, the name is the numeric position of the
    *   item in the list, starting with 0. Otherwise, NULL is returned.
@@ -164,4 +159,5 @@ interface TypedDataInterface {
    *   root of a typed data tree. Defaults to NULL.
    */
   public function setContext($name = NULL, TraversableTypedDataInterface $parent = NULL);
+
 }

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Entity\EntityDisplayModeBase.
- */
-
 namespace Drupal\Core\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
@@ -91,7 +86,7 @@ abstract class EntityDisplayModeBase extends ConfigEntityBase implements EntityD
    */
   public function calculateDependencies() {
     parent::calculateDependencies();
-    $target_entity_type = \Drupal::entityManager()->getDefinition($this->targetEntityType);
+    $target_entity_type = \Drupal::entityTypeManager()->getDefinition($this->targetEntityType);
     $this->addDependency('module', $target_entity_type->getProvider());
     return $this;
   }
@@ -101,7 +96,7 @@ abstract class EntityDisplayModeBase extends ConfigEntityBase implements EntityD
    */
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
-    \Drupal::entityManager()->clearCachedFieldDefinitions();
+    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
   }
 
   /**
@@ -109,7 +104,19 @@ abstract class EntityDisplayModeBase extends ConfigEntityBase implements EntityD
    */
   public static function preDelete(EntityStorageInterface $storage, array $entities) {
     parent::preDelete($storage, $entities);
-    \Drupal::entityManager()->clearCachedFieldDefinitions();
+    \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function urlRouteParameters($rel) {
+    $uri_route_parameters = parent::urlRouteParameters($rel);
+    if ($rel === 'add-form') {
+      $uri_route_parameters['entity_type_id'] = $this->getTargetType();
+    }
+
+    return $uri_route_parameters;
   }
 
 }

@@ -1,19 +1,21 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\EventSubscriber\CustomPageExceptionHtmlSubscriberTest.
- */
-
 namespace Drupal\Tests\Core\EventSubscriber;
 
 use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Access\AccessResult;
+use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\EventSubscriber\CustomPageExceptionHtmlSubscriber;
+use Drupal\Core\Render\HtmlResponse;
+use Drupal\Core\Routing\AccessAwareRouterInterface;
+use Drupal\Core\Url;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\GetResponseForExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\HttpKernel\HttpKernelInterface;
+use Symfony\Component\Routing\RequestContext;
 
 /**
  * @coversDefaultClass \Drupal\Core\EventSubscriber\CustomPageExceptionHtmlSubscriber
@@ -24,23 +26,16 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
   /**
    * The mocked HTTP kernel.
    *
-   * @var \Symfony\Component\HttpKernel\HttpKernelInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Symfony\Component\HttpKernel\HttpKernelInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $kernel;
 
   /**
    * The mocked config factory
    *
-   * @var  \Drupal\Core\Config\ConfigFactoryInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Config\ConfigFactoryInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $configFactory;
-
-  /**
-   * The mocked alias manager.
-   *
-   * @var \Drupal\Core\Path\AliasManagerInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
-  protected $aliasManager;
 
   /**
    * The mocked logger.
@@ -66,26 +61,55 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
   /**
    * The mocked redirect.destination service.
    *
-   * @var \Drupal\Core\Routing\RedirectDestinationInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Routing\RedirectDestinationInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $redirectDestination;
+
+  /**
+   * The mocked access unaware router.
+   * @var \Symfony\Component\Routing\Matcher\UrlMatcherInterface|\PHPUnit\Framework\MockObject\MockObject
+   */
+  protected $accessUnawareRouter;
+
+  /**
+   * The access manager.
+   *
+   * @var \Drupal\Core\Access\AccessManagerInterface
+   */
+  protected $accessManager;
 
   /**
    * {@inheritdoc}
    */
   protected function setUp() {
-    $this->configFactory = $this->getConfigFactoryStub(['system.site' => ['page.403' => 'access-denied-page', 'page.404' => 'not-found-page']]);
+    $this->configFactory = $this->getConfigFactoryStub(['system.site' => ['page.403' => '/access-denied-page', 'page.404' => '/not-found-page']]);
 
-    $this->aliasManager = $this->getMock('Drupal\Core\Path\AliasManagerInterface');
-    $this->kernel = $this->getMock('Symfony\Component\HttpKernel\HttpKernelInterface');
-    $this->logger = $this->getMock('Psr\Log\LoggerInterface');
-    $this->redirectDestination = $this->getMock('\Drupal\Core\Routing\RedirectDestinationInterface');
-
+    $this->kernel = $this->createMock('Symfony\Component\HttpKernel\HttpKernelInterface');
+    $this->logger = $this->createMock('Psr\Log\LoggerInterface');
+    $this->redirectDestination = $this->createMock('\Drupal\Core\Routing\RedirectDestinationInterface');
     $this->redirectDestination->expects($this->any())
       ->method('getAsArray')
       ->willReturn(['destination' => 'test']);
+    $this->accessUnawareRouter = $this->createMock('Symfony\Component\Routing\Matcher\UrlMatcherInterface');
+    $this->accessUnawareRouter->expects($this->any())
+      ->method('match')
+      ->willReturn([
+        '_controller' => 'mocked',
+      ]);
+    $this->accessManager = $this->createMock('Drupal\Core\Access\AccessManagerInterface');
+    $this->accessManager->expects($this->any())
+      ->method('checkNamedRoute')
+      ->willReturn(AccessResult::allowed()->addCacheTags(['foo', 'bar']));
 
-    $this->customPageSubscriber = new CustomPageExceptionHtmlSubscriber($this->configFactory, $this->aliasManager, $this->kernel, $this->logger, $this->redirectDestination);
+    $this->customPageSubscriber = new CustomPageExceptionHtmlSubscriber($this->configFactory, $this->kernel, $this->logger, $this->redirectDestination, $this->accessUnawareRouter, $this->accessManager);
+
+    $path_validator = $this->createMock('Drupal\Core\Path\PathValidatorInterface');
+    $path_validator->expects($this->any())
+      ->method('getUrlIfValidWithoutAccessCheck')
+      ->willReturn(Url::fromRoute('foo', ['foo' => 'bar']));
+    $container = new ContainerBuilder();
+    $container->set('path.validator', $path_validator);
+    \Drupal::setContainer($container);
 
     // You can't create an exception in PHP without throwing it. Store the
     // current error_log, and disable it temporarily.
@@ -100,54 +124,55 @@ class CustomPageExceptionHtmlSubscriberTest extends UnitTestCase {
   }
 
   /**
-   * Sets up an alias manager that does nothing.
-   */
-  protected function setupStubAliasManager() {
-    $this->aliasManager->expects($this->any())
-      ->method('getPathByAlias')
-      ->willReturnArgument(0);
-  }
-
-  /**
    * Tests onHandleException with a POST request.
    */
   public function testHandleWithPostRequest() {
-    $this->setupStubAliasManager();
+    $request = Request::create('/test', 'POST', ['name' => 'druplicon', 'pass' => '12345']);
 
-    $request = Request::create('/test', 'POST', array('name' => 'druplicon', 'pass' => '12345'));
+    $request_context = new RequestContext();
+    $request_context->fromRequest($request);
+    $this->accessUnawareRouter->expects($this->any())
+      ->method('getContext')
+      ->willReturn($request_context);
 
     $this->kernel->expects($this->once())->method('handle')->will($this->returnCallback(function (Request $request) {
-      return new Response($request->getMethod());
+      return new HtmlResponse($request->getMethod());
     }));
 
-    $event = new GetResponseForExceptionEvent($this->kernel, $request, 'foo', new NotFoundHttpException('foo'));
+    $event = new GetResponseForExceptionEvent($this->kernel, $request, HttpKernelInterface::MASTER_REQUEST, new NotFoundHttpException('foo'));
 
     $this->customPageSubscriber->onException($event);
 
     $response = $event->getResponse();
     $result = $response->getContent() . " " . UrlHelper::buildQuery($request->request->all());
     $this->assertEquals('POST name=druplicon&pass=12345', $result);
+    $this->assertEquals(AccessResult::allowed()->addCacheTags(['foo', 'bar']), $request->attributes->get(AccessAwareRouterInterface::ACCESS_RESULT));
   }
 
   /**
    * Tests onHandleException with a GET request.
    */
   public function testHandleWithGetRequest() {
-    $this->setupStubAliasManager();
+    $request = Request::create('/test', 'GET', ['name' => 'druplicon', 'pass' => '12345']);
+    $request->attributes->set(AccessAwareRouterInterface::ACCESS_RESULT, AccessResult::forbidden()->addCacheTags(['druplicon']));
 
-    $request = Request::create('/test', 'GET', array('name' => 'druplicon', 'pass' => '12345'));
+    $request_context = new RequestContext();
+    $request_context->fromRequest($request);
+    $this->accessUnawareRouter->expects($this->any())
+      ->method('getContext')
+      ->willReturn($request_context);
 
     $this->kernel->expects($this->once())->method('handle')->will($this->returnCallback(function (Request $request) {
       return new Response($request->getMethod() . ' ' . UrlHelper::buildQuery($request->query->all()));
     }));
 
-    $event = new GetResponseForExceptionEvent($this->kernel, $request, 'foo', new NotFoundHttpException('foo'));
+    $event = new GetResponseForExceptionEvent($this->kernel, $request, HttpKernelInterface::MASTER_REQUEST, new NotFoundHttpException('foo'));
     $this->customPageSubscriber->onException($event);
 
     $response = $event->getResponse();
     $result = $response->getContent() . " " . UrlHelper::buildQuery($request->request->all());
     $this->assertEquals('GET name=druplicon&pass=12345&destination=test&_exception_statuscode=404 ', $result);
+    $this->assertEquals(AccessResult::forbidden()->addCacheTags(['druplicon', 'foo', 'bar']), $request->attributes->get(AccessAwareRouterInterface::ACCESS_RESULT));
   }
 
 }
-

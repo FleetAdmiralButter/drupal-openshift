@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\KernelTests\Core\Theme\StableTemplateOverrideTest.
- */
-
 namespace Drupal\KernelTests\Core\Theme;
 
 use Drupal\Core\Theme\Registry;
@@ -48,13 +43,12 @@ class StableTemplateOverrideTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  protected function setUp() {
     parent::setUp();
     $this->themeHandler = $this->container->get('theme_handler');
 
     $this->container->get('theme_installer')->install(['stable']);
 
-    $this->installSchema('system', 'router');
     $this->installAllModules();
   }
 
@@ -62,15 +56,12 @@ class StableTemplateOverrideTest extends KernelTestBase {
    * Installs all core modules.
    */
   protected function installAllModules() {
-    // Needed for system_rebuild_module_data().
-    include_once $this->root . '/core/modules/system/system.module';
-
     // Enable all core modules.
-    $all_modules = system_rebuild_module_data();
+    $all_modules = $this->container->get('extension.list.module')->getList();
     $all_modules = array_filter($all_modules, function ($module) {
-      // Filter contrib, hidden, already enabled modules and modules in the
-      // Testing package.
-      if ($module->origin !== 'core' || !empty($module->info['hidden']) || $module->status == TRUE || $module->info['package'] == 'Testing') {
+      // Filter contrib, hidden, experimental, already enabled modules, and
+      // modules in the Testing package.
+      if ($module->origin !== 'core' || !empty($module->info['hidden']) || $module->status == TRUE || $module->info['package'] == 'Testing' || $module->info['package'] == 'Core (Experimental)') {
         return FALSE;
       }
       return TRUE;
@@ -88,7 +79,7 @@ class StableTemplateOverrideTest extends KernelTestBase {
    * Ensures that Stable overrides all relevant core templates.
    */
   public function testStableTemplateOverrides() {
-    $registry = new Registry(\Drupal::root(), \Drupal::cache(), \Drupal::lock(), \Drupal::moduleHandler(), $this->themeHandler, \Drupal::service('theme.initialization'), 'stable');
+    $registry = new Registry($this->root, \Drupal::cache(), \Drupal::lock(), \Drupal::moduleHandler(), $this->themeHandler, \Drupal::service('theme.initialization'), 'stable');
     $registry->setThemeManager(\Drupal::theme());
 
     $registry_full = $registry->get();

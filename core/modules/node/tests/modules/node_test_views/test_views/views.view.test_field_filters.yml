@@ -11,7 +11,6 @@ description: ''
 tag: ''
 base_table: node_field_data
 base_field: nid
-core: 8.x
 display:
   default:
     display_plugin: default
@@ -91,7 +90,7 @@ display:
           plugin_id: field
       filters:
         status:
-          value: true
+          value: '1'
           table: node_field_data
           field: status
           id: status
@@ -177,7 +176,7 @@ display:
         filter_groups: false
       filters:
         status:
-          value: true
+          value: '1'
           table: node_field_data
           field: status
           id: status
@@ -244,7 +243,7 @@ display:
         filter_groups: false
       filters:
         status:
-          value: true
+          value: '1'
           table: node_field_data
           field: status
           id: status
@@ -311,7 +310,7 @@ display:
         filter_groups: false
       filters:
         status:
-          value: true
+          value: '1'
           table: node_field_data
           field: status
           id: status

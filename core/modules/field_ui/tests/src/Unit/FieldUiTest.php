@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\field_ui\Unit\FieldUiTest.
- */
-
 namespace Drupal\Tests\field_ui\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
@@ -21,7 +16,7 @@ class FieldUiTest extends UnitTestCase {
   /**
    * The path validator.
    *
-   * @var \Drupal\Core\Path\PathValidatorInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Path\PathValidatorInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $pathValidator;
 
@@ -31,7 +26,7 @@ class FieldUiTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->pathValidator = $this->getMock('Drupal\Core\Path\PathValidatorInterface');
+    $this->pathValidator = $this->createMock('Drupal\Core\Path\PathValidatorInterface');
     $container = new ContainerBuilder();
     $container->set('path.validator', $this->pathValidator);
     \Drupal::setContainer($container);

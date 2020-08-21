@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Block\BlockBaseTest.
- */
-
 namespace Drupal\Tests\Core\Block;
 
 use Drupal\block_test\Plugin\Block\TestBlockInstantiation;
@@ -19,32 +14,40 @@ class BlockBaseTest extends UnitTestCase {
   /**
    * Tests the machine name suggestion.
    *
-   * @see \Drupal\Core\Block\BlockBase::getMachineNameSuggestion().
+   * @see \Drupal\Core\Block\BlockBase::getMachineNameSuggestion()
+   *
+   * @param string $label
+   *   The block label.
+   * @param string $expected
+   *   The expected machine name.
+   *
+   * @dataProvider providerTestGetMachineNameSuggestion()
    */
-  public function testGetMachineNameSuggestion() {
-    $module_handler = $this->getMock('Drupal\Core\Extension\ModuleHandlerInterface');
+  public function testGetMachineNameSuggestion($label, $expected) {
+    $module_handler = $this->createMock('Drupal\Core\Extension\ModuleHandlerInterface');
     $transliteration = $this->getMockBuilder('Drupal\Core\Transliteration\PhpTransliteration')
-      ->setConstructorArgs(array(NULL, $module_handler))
-      ->setMethods(array('readLanguageOverrides'))
+      ->setConstructorArgs([NULL, $module_handler])
+      ->setMethods(['readLanguageOverrides'])
       ->getMock();
 
-    $config = array();
-    $definition = array(
-      'admin_label' => 'Admin label',
+    $config = [];
+    $definition = [
+      'admin_label' => $label,
       'provider' => 'block_test',
-    );
+    ];
     $block_base = new TestBlockInstantiation($config, 'test_block_instantiation', $definition);
     $block_base->setTransliteration($transliteration);
-    $this->assertEquals('adminlabel', $block_base->getMachineNameSuggestion());
+    $this->assertEquals($expected, $block_base->getMachineNameSuggestion());
+  }
 
-    // Test with more unicodes.
-    $definition = array(
-      'admin_label' => 'über åwesome',
-      'provider' => 'block_test',
-    );
-    $block_base = new TestBlockInstantiation($config, 'test_block_instantiation', $definition);
-    $block_base->setTransliteration($transliteration);
-    $this->assertEquals('uberawesome', $block_base->getMachineNameSuggestion());
+  /**
+   * Provides data for testGetMachineNameSuggestion().
+   */
+  public function providerTestGetMachineNameSuggestion() {
+    return [
+      ['Admin label', 'adminlabel'],
+      ['über åwesome', 'uberawesome'],
+    ];
   }
 
 }

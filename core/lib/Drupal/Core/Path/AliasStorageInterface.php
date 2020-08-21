@@ -1,16 +1,18 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Path\AliasStorageInterface.
- */
-
 namespace Drupal\Core\Path;
 
 use Drupal\Core\Language\LanguageInterface;
 
 /**
  * Provides a class for CRUD operations on path aliases.
+ *
+ * @deprecated \Drupal\Core\Path\AliasStorage is deprecated in drupal:8.8.0 and
+ *   is removed from drupal:9.0.0. Use the "path_alias.repository" service
+ *   instead, or the entity storage handler for the "path_alias" entity type
+ *   for CRUD methods.
+ *
+ * @see https://www.drupal.org/node/3013865
  */
 interface AliasStorageInterface {
 
@@ -169,4 +171,5 @@ interface AliasStorageInterface {
    *   TRUE if any alias exists, FALSE otherwise.
    */
   public function pathHasMatchingAlias($initial_substring);
+
 }

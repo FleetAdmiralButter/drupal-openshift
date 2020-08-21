@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\router_test\Access\TestAccessCheck.
- */
-
 namespace Drupal\router_test\Access;
 
 use Drupal\Core\Access\AccessResult;
@@ -18,12 +13,13 @@ class TestAccessCheck implements AccessInterface {
   /**
    * Checks access.
    *
-   * @return string
-   *   A \Drupal\Core\Access\AccessInterface constant value.
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
    */
   public function access() {
     // No opinion, so other access checks should decide if access should be
     // allowed or not.
     return AccessResult::neutral();
   }
+
 }

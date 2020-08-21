@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\contact\Access\ContactPageAccess.
- */
-
 namespace Drupal\contact\Access;
 
 use Drupal\Core\Access\AccessResult;
@@ -29,7 +24,7 @@ class ContactPageAccess implements AccessInterface {
   /**
    * The user data service.
    *
-   * @var \Drupal\user\UserDataInterface;
+   * @var \Drupal\user\UserDataInterface
    */
   protected $userData;
 
@@ -79,7 +74,7 @@ class ContactPageAccess implements AccessInterface {
     }
 
     // If requested user has been blocked, do not allow users to contact them.
-    $access->cacheUntilEntityChanges($contact_account);
+    $access->addCacheableDependency($contact_account);
     if ($contact_account->isBlocked()) {
       return $access;
     }
@@ -93,7 +88,7 @@ class ContactPageAccess implements AccessInterface {
     // If the requested user did not save a preference yet, deny access if the
     // configured default is disabled.
     $contact_settings = $this->configFactory->get('contact.settings');
-    $access->cacheUntilConfigurationChanges($contact_settings);
+    $access->addCacheableDependency($contact_settings);
     if (!isset($account_data) && !$contact_settings->get('user_default_enabled')) {
       return $access;
     }

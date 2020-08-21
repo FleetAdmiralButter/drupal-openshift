@@ -1,16 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\node\Form\NodeDeleteForm.
- */
-
 namespace Drupal\node\Form;
 
 use Drupal\Core\Entity\ContentEntityDeleteForm;
 
 /**
  * Provides a form for deleting a node.
+ *
+ * @internal
  */
 class NodeDeleteForm extends ContentEntityDeleteForm {
 
@@ -21,7 +18,7 @@ class NodeDeleteForm extends ContentEntityDeleteForm {
     /** @var \Drupal\node\NodeInterface $entity */
     $entity = $this->getEntity();
 
-    $node_type_storage = $this->entityManager->getStorage('node_type');
+    $node_type_storage = $this->entityTypeManager->getStorage('node_type');
     $node_type = $node_type_storage->load($entity->bundle())->label();
 
     if (!$entity->isDefaultTranslation()) {
@@ -32,10 +29,10 @@ class NodeDeleteForm extends ContentEntityDeleteForm {
       ]);
     }
 
-    return $this->t('The @type %title has been deleted.', array(
+    return $this->t('The @type %title has been deleted.', [
       '@type' => $node_type,
       '%title' => $this->getEntity()->label(),
-    ));
+    ]);
   }
 
   /**

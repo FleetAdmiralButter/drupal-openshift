@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Database\Query\QueryConditionTrait.
- */
-
 namespace Drupal\Core\Database\Query;
 
 use Drupal\Core\Database\Connection;
@@ -68,6 +63,14 @@ trait QueryConditionTrait {
   /**
    * {@inheritdoc}
    */
+  public function alwaysFalse() {
+    $this->condition->alwaysFalse();
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function &conditions() {
     return $this->condition->conditions();
   }
@@ -82,7 +85,7 @@ trait QueryConditionTrait {
   /**
    * {@inheritdoc}
    */
-  public function where($snippet, $args = array()) {
+  public function where($snippet, $args = []) {
     $this->condition->where($snippet, $args);
     return $this;
   }
@@ -105,7 +108,7 @@ trait QueryConditionTrait {
    * {@inheritdoc}
    */
   public function conditionGroupFactory($conjunction = 'AND') {
-    return new Condition($conjunction);
+    return $this->connection->condition($conjunction);
   }
 
   /**

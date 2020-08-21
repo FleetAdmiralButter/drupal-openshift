@@ -1,15 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\ban\Plugin\migrate\destination\BlockedIP.
- */
-
 namespace Drupal\ban\Plugin\migrate\destination;
 
 use Drupal\ban\BanIpManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\migrate\Entity\MigrationInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\Plugin\migrate\destination\DestinationBase;
 use Drupal\migrate\Row;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -21,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "blocked_ip"
  * )
  */
-class BlockedIP extends DestinationBase implements ContainerFactoryPluginInterface {
+class BlockedIp extends DestinationBase implements ContainerFactoryPluginInterface {
 
   /**
    * The IP ban manager.
@@ -31,18 +26,18 @@ class BlockedIP extends DestinationBase implements ContainerFactoryPluginInterfa
   protected $banManager;
 
   /**
-   * Constructs a BlockedIP object.
+   * Constructs a BlockedIp object.
    *
    * @param array $configuration
-   *  Plugin configuration.
+   *   Plugin configuration.
    * @param string $plugin_id
-   *  The plugin ID.
+   *   The plugin ID.
    * @param mixed $plugin_definition
-   *  The plugin definiiton.
-   * @param \Drupal\migrate\Entity\MigrationInterface $migration
-   *  The current migration.
+   *   The plugin definition.
+   * @param \Drupal\migrate\Plugin\MigrationInterface $migration
+   *   The current migration.
    * @param \Drupal\ban\BanIpManagerInterface $ban_manager
-   *  The IP manager service.
+   *   The IP manager service.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration, BanIpManagerInterface $ban_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $migration);
@@ -81,7 +76,7 @@ class BlockedIP extends DestinationBase implements ContainerFactoryPluginInterfa
   /**
    * {@inheritdoc}
    */
-  public function import(Row $row, array $old_destination_id_values = array()) {
+  public function import(Row $row, array $old_destination_id_values = []) {
     $this->banManager->banIp($row->getDestinationProperty('ip'));
   }
 

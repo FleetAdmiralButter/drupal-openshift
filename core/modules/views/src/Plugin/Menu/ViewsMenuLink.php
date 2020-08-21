@@ -1,14 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Plugin\Menu\ViewsMenuLink.
- */
-
 namespace Drupal\views\Plugin\Menu;
 
+use Drupal\Core\DependencyInjection\DeprecatedServicePropertyTrait;
 use Drupal\Core\Menu\MenuLinkBase;
-use Drupal\Core\Entity\EntityManagerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\views\ViewExecutableFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -19,11 +15,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @see \Drupal\views\Plugin\Derivative\ViewsMenuLink
  */
 class ViewsMenuLink extends MenuLinkBase implements ContainerFactoryPluginInterface {
+  use DeprecatedServicePropertyTrait;
 
   /**
    * {@inheritdoc}
    */
-  protected $overrideAllowed = array(
+  protected $deprecatedProperties = ['entityManager' => 'entity.manager'];
+
+  /**
+   * {@inheritdoc}
+   */
+  protected $overrideAllowed = [
     'menu_name' => 1,
     'parent' => 1,
     'weight' => 1,
@@ -31,15 +33,14 @@ class ViewsMenuLink extends MenuLinkBase implements ContainerFactoryPluginInterf
     'enabled' => 1,
     'title' => 1,
     'description' => 1,
-    'metadata' => 1,
-  );
+  ];
 
   /**
-   * The entity manager.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Entity\EntityManagerInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityManager;
+  protected $entityTypeManager;
 
   /**
    * The view executable factory.
@@ -64,17 +65,15 @@ class ViewsMenuLink extends MenuLinkBase implements ContainerFactoryPluginInterf
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    * @param \Drupal\views\ViewExecutableFactory $view_executable_factory
    *   The view executable factory
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityManagerInterface $entity_manager, ViewExecutableFactory $view_executable_factory) {
-    $this->configuration = $configuration;
-    $this->pluginId = $plugin_id;
-    $this->pluginDefinition = $plugin_definition;
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, ViewExecutableFactory $view_executable_factory) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
 
-    $this->entityManager = $entity_manager;
+    $this->entityTypeManager = $entity_type_manager;
     $this->viewExecutableFactory = $view_executable_factory;
   }
 
@@ -86,7 +85,7 @@ class ViewsMenuLink extends MenuLinkBase implements ContainerFactoryPluginInterf
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('entity.manager'),
+      $container->get('entity_type.manager'),
       $container->get('views.executable')
     );
   }
@@ -102,7 +101,7 @@ class ViewsMenuLink extends MenuLinkBase implements ContainerFactoryPluginInterf
       $metadata = $this->getMetaData();
       $view_id = $metadata['view_id'];
       $display_id = $metadata['display_id'];
-      $view_entity = $this->entityManager->getStorage('view')->load($view_id);
+      $view_entity = $this->entityTypeManager->getStorage('view')->load($view_id);
       $view = $this->viewExecutableFactory->get($view_entity);
       $view->setDisplay($display_id);
       $view->initDisplay();
@@ -134,7 +133,6 @@ class ViewsMenuLink extends MenuLinkBase implements ContainerFactoryPluginInterf
     return (bool) $this->loadView()->display_handler->getOption('menu')['expanded'];
   }
 
-
   /**
    * {@inheritdoc}
    */
@@ -147,9 +145,9 @@ class ViewsMenuLink extends MenuLinkBase implements ContainerFactoryPluginInterf
       $display = &$view->storage->getDisplay($view->current_display);
       // Just save the title to the original view.
       $changed = FALSE;
-      foreach ($new_definition_values as $key => $new_definition_value) {
-        if (isset($display['display_options']['menu'][$key]) && $display['display_options']['menu'][$key] != $new_definition_values[$key]) {
-          $display['display_options']['menu'][$key] = $new_definition_values[$key];
+      foreach ($overrides as $key => $new_definition_value) {
+        if (empty($display['display_options']['menu'][$key]) || $display['display_options']['menu'][$key] != $new_definition_value) {
+          $display['display_options']['menu'][$key] = $new_definition_value;
           $changed = TRUE;
         }
       }

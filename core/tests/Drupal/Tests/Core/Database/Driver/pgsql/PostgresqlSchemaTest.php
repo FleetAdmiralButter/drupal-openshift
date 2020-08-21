@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Drupal\Tests\Core\Database\Driver\pgsql\PostgresqlSchemaTest.
- */
 
 namespace Drupal\Tests\Core\Database\Driver\pgsql;
 
@@ -18,7 +14,7 @@ class PostgresqlSchemaTest extends UnitTestCase {
   /**
    * The PostgreSql DB connection.
    *
-   * @var \PHPUnit_Framework_MockObject_MockObject|\Drupal\Core\Database\Driver\pgsql\Connection
+   * @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\Core\Database\Driver\pgsql\Connection
    */
   protected $connection;
 
@@ -50,7 +46,7 @@ class PostgresqlSchemaTest extends UnitTestCase {
     $max_identifier_length = 63;
     $schema = new Schema($this->connection);
 
-    $statement = $this->getMock('\Drupal\Core\Database\StatementInterface');
+    $statement = $this->createMock('\Drupal\Core\Database\StatementInterface');
     $statement->expects($this->any())
       ->method('fetchField')
       ->willReturn($max_identifier_length);
@@ -62,7 +58,7 @@ class PostgresqlSchemaTest extends UnitTestCase {
     $this->connection->expects($this->at(2))
       ->method('query')
       ->with("SELECT 1 FROM pg_constraint WHERE conname = '$expected'")
-      ->willReturn($this->getMock('\Drupal\Core\Database\StatementInterface'));
+      ->willReturn($this->createMock('\Drupal\Core\Database\StatementInterface'));
 
     $schema->constraintExists($table_name, $name);
   }

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Render\Plugin\DisplayVariant\SimplePageVariant.
- */
-
 namespace Drupal\Core\Render\Plugin\DisplayVariant;
 
 use Drupal\Core\Display\PageVariantInterface;
@@ -59,6 +54,7 @@ class SimplePageVariant extends VariantBase implements PageVariantInterface {
         'messages' => [
           '#type' => 'status_messages',
           '#weight' => -1000,
+          '#include_fallback' => TRUE,
         ],
         'page_title' => [
           '#type' => 'page_title',

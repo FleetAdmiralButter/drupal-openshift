@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\hal\Unit\NormalizerDenormalizeExceptionsUnitTestBase.
- */
-
 namespace Drupal\Tests\hal\Unit;
 
 use Drupal\Tests\UnitTestCase;
@@ -23,14 +18,16 @@ abstract class NormalizerDenormalizeExceptionsUnitTestBase extends UnitTestCase 
    * @return array Test data.
    */
   public function providerNormalizerDenormalizeExceptions() {
-    $mock = $this->getMock('\Drupal\Core\Field\Plugin\DataType\FieldItem', array('getParent'));
+    $mock = $this->getMockBuilder('\Drupal\Core\Field\Plugin\DataType\FieldItem')
+      ->setMethods(['getParent'])
+      ->getMock();
     $mock->expects($this->any())
       ->method('getParent')
       ->will($this->returnValue(NULL));
-    return array(
-      array(array()),
-      array(array('target_instance' => $mock)),
-    );
+    return [
+      [[]],
+      [['target_instance' => $mock]],
+    ];
   }
 
 }

@@ -1,11 +1,6 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\views\Unit\Routing\ViewPageControllerTest.
- */
-
-namespace Drupal\Tests\views\Unit\Routing {
+namespace Drupal\Tests\views\Unit\Routing;
 
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Tests\UnitTestCase;
@@ -69,7 +64,7 @@ class ViewPageControllerTest extends UnitTestCase {
     $route_match = RouteMatch::createFromRequest($request);
 
     $output = $this->pageController->handle($route_match->getParameter('view_id'), $route_match->getParameter('display_id'), $route_match);
-    $this->assertInternalType('array', $output);
+    $this->assertIsArray($output);
     $this->assertEquals($build, $output);
   }
 
@@ -152,8 +147,8 @@ class ViewPageControllerTest extends UnitTestCase {
     $request->attributes->set('view_id', 'test_page_view');
     $request->attributes->set('display_id', 'page_1');
     // Add the argument to the request.
-    $request->attributes->set('test_entity', $this->getMock('Drupal\Core\Entity\EntityInterface'));
-    $raw_variables = new ParameterBag(array('test_entity' => 'example_id'));
+    $request->attributes->set('test_entity', $this->createMock('Drupal\Core\Entity\EntityInterface'));
+    $raw_variables = new ParameterBag(['test_entity' => 'example_id']);
     $request->attributes->set('_raw_variables', $raw_variables);
     $options = [
       '_view_argument_map' => [
@@ -182,13 +177,13 @@ class ViewPageControllerTest extends UnitTestCase {
 
 }
 
-}
+// @todo https://www.drupal.org/node/2571679 replace
+//   views_add_contextual_links().
+namespace Drupal\views\Routing;
 
-namespace {
-  // @todo https://www.drupal.org/node/2571679 replace
-  // views_add_contextual_links()
-  if (!function_exists('views_add_contextual_links')) {
-    function views_add_contextual_links() {
-    }
+if (!function_exists('views_add_contextual_links')) {
+
+  function views_add_contextual_links() {
   }
+
 }

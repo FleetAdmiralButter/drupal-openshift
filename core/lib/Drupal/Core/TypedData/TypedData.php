@@ -1,13 +1,9 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\TypedData\TypedData.
- */
-
 namespace Drupal\Core\TypedData;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
+use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
@@ -19,7 +15,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  * @ingroup typed_data
  */
 abstract class TypedData implements TypedDataInterface, PluginInspectionInterface {
-
+  use DependencySerializationTrait;
   use StringTranslationTrait;
   use TypedDataTrait;
 
@@ -64,12 +60,8 @@ abstract class TypedData implements TypedDataInterface, PluginInspectionInterfac
    *   root of a typed data tree. Defaults to NULL.
    *
    * @see \Drupal\Core\TypedData\TypedDataManager::create()
-   *
-   * @todo When \Drupal\Core\Config\TypedConfigManager has been fixed to use
-   *   class-based definitions, type-hint $definition to
-   *   DataDefinitionInterface. https://www.drupal.org/node/1928868
    */
-  public function __construct($definition, $name = NULL, TypedDataInterface $parent = NULL) {
+  public function __construct(DataDefinitionInterface $definition, $name = NULL, TypedDataInterface $parent = NULL) {
     $this->definition = $definition;
     $this->parent = $parent;
     $this->name = $name;
@@ -126,7 +118,7 @@ abstract class TypedData implements TypedDataInterface, PluginInspectionInterfac
    */
   public function getConstraints() {
     $constraint_manager = $this->getTypedDataManager()->getValidationConstraintManager();
-    $constraints = array();
+    $constraints = [];
     foreach ($this->definition->getConstraints() as $name => $options) {
       $constraints[] = $constraint_manager->create($name, $options);
     }
@@ -199,4 +191,5 @@ abstract class TypedData implements TypedDataInterface, PluginInspectionInterfac
   public function getParent() {
     return $this->parent;
   }
+
 }

@@ -1,13 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\book\Unit\BookUninstallValidatorTest.
- */
-
 namespace Drupal\Tests\book\Unit;
 
-use Drupal\simpletest\AssertHelperTrait;
+use Drupal\Tests\AssertHelperTrait;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -19,7 +14,7 @@ class BookUninstallValidatorTest extends UnitTestCase {
   use AssertHelperTrait;
 
   /**
-   * @var \Drupal\book\BookUninstallValidator|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\book\BookUninstallValidator|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $bookUninstallValidator;
 

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Entity\Query\QueryAggregateInterface.
- */
-
 namespace Drupal\Core\Entity\Query;
 
 /**
@@ -28,7 +23,7 @@ interface QueryAggregateInterface extends QueryInterface {
    * @param string $alias
    *   (optional) The key that will be used on the resultset.
    *
-   * @return \Drupal\Core\Entity\Query\QueryAggregateInterface
+   * @return $this
    *   The called object.
    */
   public function aggregate($field, $function, $langcode = NULL, &$alias = NULL);
@@ -39,7 +34,7 @@ interface QueryAggregateInterface extends QueryInterface {
    * @param string $field
    *   The name of the field to group by.
    *
-   * @return \Drupal\Core\Entity\Query\QueryAggregateInterface
+   * @return $this
    *   The called object.
    */
   public function groupBy($field);
@@ -53,7 +48,6 @@ interface QueryAggregateInterface extends QueryInterface {
    *   The aggregation function, for example COUNT or MIN.
    * @param mixed $value
    *   The actual value of the field.
-   *
    * @param $operator
    *   Possible values:
    *   - '=', '<>', '>', '>=', '<', '<=', 'STARTS_WITH', 'CONTAINS',
@@ -63,14 +57,13 @@ interface QueryAggregateInterface extends QueryInterface {
    *     literals of the same type as the column.
    *   - 'BETWEEN': This operator expects $value to be an array of two literals
    *     of the same type as the column.
-   *
    * @param string $langcode
    *   (optional) The language code.
    *
-   * @return \Drupal\Core\Entity\Query\QueryAggregateInterface
+   * @return $this
    *   The called object.
    *
-   * @see \Drupal\Core\Entity\Query\QueryInterface::condition().
+   * @see \Drupal\Core\Entity\Query\QueryInterface::condition()
    */
   public function conditionAggregate($field, $function = NULL, $value = NULL, $operator = '=', $langcode = NULL);
 
@@ -84,7 +77,7 @@ interface QueryAggregateInterface extends QueryInterface {
    * @param $langcode
    *   (optional) The language code.
    *
-   * @return \Drupal\Core\Entity\Query\QueryAggregateInterface
+   * @return $this
    *   The called object.
    */
   public function existsAggregate($field, $function, $langcode = NULL);
@@ -92,14 +85,14 @@ interface QueryAggregateInterface extends QueryInterface {
   /**
    * Queries for the nonexistence of a field.
    *
-   * @param string $field.
+   * @param string $field
    *   The name of a field.
    * @param string $function
    *   The aggregate function.
    * @param string $langcode
    *   (optional) The language code.
    *
-   * @return \Drupal\Core\Entity\Query\QueryAggregateInterface
+   * @return $this
    *   The called object.
    */
   public function notExistsAggregate($field, $function, $langcode = NULL);
@@ -131,7 +124,7 @@ interface QueryAggregateInterface extends QueryInterface {
    * @param string $langcode
    *   (optional) The language code.
    *
-   * @return \Drupal\Core\Entity\Query\QueryAggregateInterface
+   * @return $this
    *   The called object.
    */
   public function sortAggregate($field, $function, $direction = 'ASC', $langcode = NULL);

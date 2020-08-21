@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Component\Serialization\SerializationInterface.
- */
-
 namespace Drupal\Component\Serialization;
 
 /**
@@ -20,6 +15,8 @@ interface SerializationInterface {
    *
    * @return string
    *   The encoded data.
+   *
+   * @throws \Drupal\Component\Serialization\Exception\InvalidDataTypeException
    */
   public static function encode($data);
 
@@ -31,6 +28,8 @@ interface SerializationInterface {
    *
    * @return mixed
    *   The decoded data.
+   *
+   * @throws \Drupal\Component\Serialization\Exception\InvalidDataTypeException
    */
   public static function decode($raw);
 

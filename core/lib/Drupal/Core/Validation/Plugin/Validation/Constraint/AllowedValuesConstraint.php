@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Validation\Plugin\Validation\Constraint\AllowedValuesConstraint.
- */
-
 namespace Drupal\Core\Validation\Plugin\Validation\Constraint;
 
 use Symfony\Component\Validator\Constraints\Choice;
@@ -21,6 +16,8 @@ use Symfony\Component\Validator\Constraints\Choice;
  */
 class AllowedValuesConstraint extends Choice {
 
+  public $strict = TRUE;
   public $minMessage = 'You must select at least %limit choice.|You must select at least %limit choices.';
   public $maxMessage = 'You must select at most %limit choice.|You must select at most %limit choices.';
+
 }

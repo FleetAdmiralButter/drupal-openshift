@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Drupal\Core\Asset\AssetResolver.
- */
 
 namespace Drupal\Core\Asset;
 
@@ -49,7 +45,7 @@ class AssetResolver implements AssetResolverInterface {
   /**
    * The language manager.
    *
-   * @var \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @var \Drupal\Core\Language\LanguageManagerInterface
    */
   protected $languageManager;
 
@@ -192,6 +188,7 @@ class AssetResolver implements AssetResolverInterface {
    *
    * @param \Drupal\Core\Asset\AttachedAssetsInterface $assets
    *   The assets attached to the current response.
+   *
    * @return array
    *   A (possibly optimized) collection of JavaScript assets.
    */
@@ -218,7 +215,7 @@ class AssetResolver implements AssetResolverInterface {
     // hook_library_info_alter(). Additionally add the current language to
     // support translation of JavaScript files via hook_js_alter().
     $libraries_to_load = $this->getLibrariesToLoad($assets);
-    $cid = 'js:' . $theme_info->getName() . ':' .  $this->languageManager->getCurrentLanguage()->getId() . ':' . Crypt::hashBase64(serialize($libraries_to_load)) . (int) (count($assets->getSettings()) > 0) . (int) $optimize;
+    $cid = 'js:' . $theme_info->getName() . ':' . $this->languageManager->getCurrentLanguage()->getId() . ':' . Crypt::hashBase64(serialize($libraries_to_load)) . (int) (count($assets->getSettings()) > 0) . (int) $optimize;
 
     if ($cached = $this->cache->get($cid)) {
       list($js_assets_header, $js_assets_footer, $settings, $settings_in_header) = $cached->data;
@@ -316,7 +313,7 @@ class AssetResolver implements AssetResolverInterface {
         $settings = $this->getJsSettingsAssets($assets);
         // Allow modules to add cached JavaScript settings.
         foreach ($this->moduleHandler->getImplementations('js_settings_build') as $module) {
-          $function = $module . '_' . 'js_settings_build';
+          $function = $module . '_js_settings_build';
           $function($settings, $assets);
         }
       }

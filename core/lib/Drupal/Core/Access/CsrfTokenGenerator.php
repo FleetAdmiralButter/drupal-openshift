@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Access\CsrfTokenGenerator.
- */
-
 namespace Drupal\Core\Access;
 
 use Drupal\Component\Utility\Crypt;
@@ -92,7 +87,7 @@ class CsrfTokenGenerator {
       return FALSE;
     }
 
-    return $token === $this->computeToken($seed, $value);
+    return hash_equals($this->computeToken($seed, $value), $token);
   }
 
   /**
@@ -105,8 +100,8 @@ class CsrfTokenGenerator {
    *
    * @return string
    *   A 43-character URL-safe token for validation, based on the token seed,
-   *   the hash salt provided by Settings::getHashSalt(), and the
-   *   'drupal_private_key' configuration variable.
+   *   the hash salt provided by Settings::getHashSalt(), and the site private
+   *   key.
    *
    * @see \Drupal\Core\Site\Settings::getHashSalt()
    */

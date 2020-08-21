@@ -1,15 +1,11 @@
 <?php
-/**
- * @file
- * Contains \Drupal\Core\Field\AllowedTagsXssTrait.
- */
 
 namespace Drupal\Core\Field;
 
 /**
  * Useful methods when dealing with displaying allowed tags.
  *
- * @deprecated in Drupal 8.0.x, will be removed before Drupal 9.0.0. Use
+ * @deprecated in drupal:8.0.0 and is removed from drupal:9.0.0. Use
  *   \Drupal\Core\Field\FieldFilteredMarkup instead.
  *
  * @see \Drupal\Core\Field\FieldFilteredMarkup
@@ -29,18 +25,20 @@ trait AllowedTagsXssTrait {
    * @param string $string
    *   The string with raw HTML in it.
    *
-   * @return \Drupal\Component\Utility\SafeMarkup
+   * @return \Drupal\Core\Field\FieldFilteredMarkup
    *   An XSS safe version of $string, or an empty string if $string is not
    *   valid UTF-8.
    */
   public function fieldFilterXss($string) {
-   return FieldFilteredMarkup::create($string);
+    @trigger_error(__METHOD__ . ' is deprecated in drupal:8.0.0 and is removed in drupal:9.0.0. Use \Drupal\Core\Field\FieldFilteredMarkup::create() instead.', E_USER_DEPRECATED);
+    return FieldFilteredMarkup::create($string);
   }
 
   /**
    * Returns a list of tags allowed by AllowedTagsXssTrait::fieldFilterXss().
    */
   public function allowedTags() {
+    @trigger_error(__METHOD__ . ' is deprecated in drupal:8.0.0 and is removed in drupal:9.0.0. Use \Drupal\Core\Field\FieldFilteredMarkup::allowedTags() instead.', E_USER_DEPRECATED);
     return FieldFilteredMarkup::allowedTags();
   }
 
@@ -48,6 +46,7 @@ trait AllowedTagsXssTrait {
    * Returns a human-readable list of allowed tags for display in help texts.
    */
   public function displayAllowedTags() {
+    @trigger_error(__METHOD__ . ' is deprecated in drupal:8.0.0 and is removed in drupal:9.0.0. Use \Drupal\Core\Field\FieldFilteredMarkup::displayAllowedTags() instead.', E_USER_DEPRECATED);
     return FieldFilteredMarkup::displayAllowedTags();
   }
 

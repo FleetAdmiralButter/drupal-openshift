@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Config\Entity\ConfigEntityType.
- */
-
 namespace Drupal\Core\Config\Entity;
 
 use Drupal\Core\Config\Entity\Exception\ConfigEntityStorageClassException;
@@ -18,6 +13,8 @@ class ConfigEntityType extends EntityType implements ConfigEntityTypeInterface {
 
   /**
    * The config prefix set in the configuration entity type annotation.
+   *
+   * @var string
    *
    * @see \Drupal\Core\Config\Entity\ConfigEntityTypeInterface::getConfigPrefix()
    */
@@ -69,9 +66,9 @@ class ConfigEntityType extends EntityType implements ConfigEntityTypeInterface {
     // Always add a default 'uuid' key.
     $this->entity_keys['uuid'] = 'uuid';
     $this->entity_keys['langcode'] = 'langcode';
-    $this->handlers += array(
+    $this->handlers += [
       'storage' => 'Drupal\Core\Config\Entity\ConfigEntityStorage',
-    );
+    ];
     $this->lookup_keys[] = 'uuid';
   }
 
@@ -132,11 +129,11 @@ class ConfigEntityType extends EntityType implements ConfigEntityTypeInterface {
   /**
    * {@inheritdoc}
    *
-   * @see \Drupal\Core\Config\Entity\ConfigEntityStorage.
-   *
    * @throws \Drupal\Core\Config\Entity\Exception\ConfigEntityStorageClassException
    *   Exception thrown when the provided class is not an instance of
    *   \Drupal\Core\Config\Entity\ConfigEntityStorage.
+   *
+   * @see \Drupal\Core\Config\Entity\ConfigEntityStorage
    */
   protected function checkStorageClass($class) {
     if (!is_a($class, 'Drupal\Core\Config\Entity\ConfigEntityStorage', TRUE)) {
@@ -147,29 +144,41 @@ class ConfigEntityType extends EntityType implements ConfigEntityTypeInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPropertiesToExport() {
-    if (!empty($this->config_export)) {
-      if (empty($this->mergedConfigExport)) {
-        // Always add default properties to be exported.
-        $this->mergedConfigExport = [
-          'uuid' => 'uuid',
-          'langcode' => 'langcode',
-          'status' => 'status',
-          'dependencies' => 'dependencies',
-          'third_party_settings' => 'third_party_settings',
-        ];
-        foreach ($this->config_export as $property => $name) {
-          if (is_numeric($property)) {
-            $this->mergedConfigExport[$name] = $name;
-          }
-          else {
-            $this->mergedConfigExport[$property] = $name;
-          }
-        }
-      }
+  public function getPropertiesToExport($id = NULL) {
+    if (!empty($this->mergedConfigExport)) {
       return $this->mergedConfigExport;
     }
-    return NULL;
+    if (!empty($this->config_export)) {
+      // Always add default properties to be exported.
+      $this->mergedConfigExport = [
+        'uuid' => 'uuid',
+        'langcode' => 'langcode',
+        'status' => 'status',
+        'dependencies' => 'dependencies',
+        'third_party_settings' => 'third_party_settings',
+        '_core' => '_core',
+      ];
+      foreach ($this->config_export as $property => $name) {
+        if (is_numeric($property)) {
+          $this->mergedConfigExport[$name] = $name;
+        }
+        else {
+          $this->mergedConfigExport[$property] = $name;
+        }
+      }
+    }
+    else {
+      // @todo https://www.drupal.org/project/drupal/issues/2949021 Deprecate
+      //   fallback to schema.
+      $config_name = $this->getConfigPrefix() . '.' . $id;
+      $definition = \Drupal::service('config.typed')->getDefinition($config_name);
+      if (!isset($definition['mapping'])) {
+        return NULL;
+      }
+      @trigger_error(sprintf('Entity type "%s" is using config schema as a fallback for a missing `config_export` definition is deprecated in Drupal 8.7.0 and will be removed before Drupal 9.0.0. See https://www.drupal.org/node/2949023.', $this->id()), E_USER_DEPRECATED);
+      $this->mergedConfigExport = array_combine(array_keys($definition['mapping']), array_keys($definition['mapping']));
+    }
+    return $this->mergedConfigExport;
   }
 
   /**

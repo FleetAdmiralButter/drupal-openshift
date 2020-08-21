@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Post update functions for test module.
+ */
+
+/**
  * First update.
  */
 function update_test_postupdate_post_update_first() {
@@ -59,6 +64,18 @@ function update_test_postupdate_post_update_test_batch(&$sandbox = NULL) {
   $execution[] = __FUNCTION__ . '-' . $sandbox['current_step'];
   \Drupal::state()->set('post_update_test_execution', $execution);
 
-  $sandbox['#finished'] = $sandbox['current_step'] /  $sandbox['steps'];
+  $sandbox['#finished'] = $sandbox['current_step'] / $sandbox['steps'];
   return 'Test post update batches';
+}
+
+/**
+ * Implements hook_removed_post_updates().
+ */
+function update_test_postupdate_removed_post_updates() {
+  return [
+    'update_test_postupdate_post_update_foo' => '8.x-1.0',
+    'update_test_postupdate_post_update_bar' => '8.x-2.0',
+    'update_test_postupdate_post_update_pub' => '3.0.0',
+    'update_test_postupdate_post_update_baz' => '3.0.0',
+  ];
 }

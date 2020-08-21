@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Menu\LocalTaskInterface.
- */
-
 namespace Drupal\Core\Menu;
 
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -75,7 +70,7 @@ interface LocalTaskInterface {
    * @param bool $active
    *   Sets whether this tab is active (e.g. a parent of the current tab).
    *
-   * @return \Drupal\Core\Menu\LocalTaskInterface
+   * @return $this
    *   The called object for chaining.
    */
   public function setActive($active = TRUE);

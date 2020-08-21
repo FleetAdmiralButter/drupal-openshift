@@ -1,66 +1,23 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\block\BlockViewBuilder.
- */
-
 namespace Drupal\block;
 
 use Drupal\Core\Block\MainContentBlockPluginInterface;
 use Drupal\Core\Block\TitleBlockPluginInterface;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
-use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Entity\EntityViewBuilder;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Render\Element;
-use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\block\Entity\Block;
+use Drupal\Core\Security\TrustedCallbackInterface;
 
 /**
  * Provides a Block view builder.
  */
-class BlockViewBuilder extends EntityViewBuilder {
-
-  /**
-   * The module handler.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
-   * Constructs a new BlockViewBuilder.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeInterface $entity_type
-   *   The entity type definition.
-   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
-   *   The entity manager service.
-   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
-   *   The language manager.
-   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
-   *   The module handler.
-   */
-  public function __construct(EntityTypeInterface $entity_type, EntityManagerInterface $entity_manager, LanguageManagerInterface $language_manager, ModuleHandlerInterface $module_handler) {
-    parent::__construct($entity_type, $entity_manager, $language_manager);
-    $this->moduleHandler = $module_handler;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function createInstance(ContainerInterface $container, EntityTypeInterface $entity_type) {
-    return new static(
-      $entity_type,
-      $container->get('entity.manager'),
-      $container->get('language_manager'),
-      $container->get('module_handler')
-    );
-  }
+class BlockViewBuilder extends EntityViewBuilder implements TrustedCallbackInterface {
 
   /**
    * {@inheritdoc}
@@ -72,16 +29,16 @@ class BlockViewBuilder extends EntityViewBuilder {
    * {@inheritdoc}
    */
   public function view(EntityInterface $entity, $view_mode = 'full', $langcode = NULL) {
-    $build = $this->viewMultiple(array($entity), $view_mode, $langcode);
+    $build = $this->viewMultiple([$entity], $view_mode, $langcode);
     return reset($build);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function viewMultiple(array $entities = array(), $view_mode = 'full', $langcode = NULL) {
+  public function viewMultiple(array $entities = [], $view_mode = 'full', $langcode = NULL) {
     /** @var \Drupal\block\BlockInterface[] $entities */
-    $build = array();
+    $build = [];
     foreach ($entities as $entity) {
       $entity_id = $entity->id();
       $plugin = $entity->getPlugin();
@@ -91,7 +48,7 @@ class BlockViewBuilder extends EntityViewBuilder {
 
       // Create the render array for the block as a whole.
       // @see template_preprocess_block().
-      $build[$entity_id] = array(
+      $build[$entity_id] = [
         '#cache' => [
           'keys' => ['entity_view', 'block', $entity->id()],
           'contexts' => Cache::mergeContexts(
@@ -102,7 +59,7 @@ class BlockViewBuilder extends EntityViewBuilder {
           'max-age' => $plugin->getCacheMaxAge(),
         ],
         '#weight' => $entity->getWeight(),
-      );
+      ];
 
       // Allow altering of cacheability metadata or setting #create_placeholder.
       $this->moduleHandler->alter(['block_build', "block_build_" . $plugin->getBaseId()], $build[$entity_id], $plugin);
@@ -180,6 +137,13 @@ class BlockViewBuilder extends EntityViewBuilder {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return ['preRender', 'lazyBuilder'];
+  }
+
+  /**
    * #lazy_builder callback; builds a #pre_render-able block.
    *
    * @param $entity_id
@@ -191,7 +155,7 @@ class BlockViewBuilder extends EntityViewBuilder {
    *   A render array with a #pre_render callback to render the block.
    */
   public static function lazyBuilder($entity_id, $view_mode) {
-    return static::buildPreRenderableBlock(entity_load('block', $entity_id), \Drupal::service('module_handler'));
+    return static::buildPreRenderableBlock(Block::load($entity_id), \Drupal::service('module_handler'));
   }
 
   /**
@@ -211,15 +175,16 @@ class BlockViewBuilder extends EntityViewBuilder {
     if ($content !== NULL && !Element::isEmpty($content)) {
       // Place the $content returned by the block plugin into a 'content' child
       // element, as a way to allow the plugin to have complete control of its
-      // properties and rendering (e.g., its own #theme) without conflicting
-      // with the properties used above, or alternate ones used by alternate
-      // block rendering approaches in contrib (e.g., Panels). However, the use
-      // of a child element is an implementation detail of this particular block
-      // rendering approach. Semantically, the content returned by the plugin
-      // "is the" block, and in particular, #attributes and #contextual_links is
-      // information about the *entire* block. Therefore, we must move these
-      // properties from $content and merge them into the top-level element.
-      foreach (array('#attributes', '#contextual_links') as $property) {
+      // properties and rendering (for instance, its own #theme) without
+      // conflicting with the properties used above, or alternate ones used by
+      // alternate block rendering approaches in contrib (for instance, Panels).
+      // However, the use of a child element is an implementation detail of this
+      // particular block rendering approach. Semantically, the content returned
+      // by the plugin "is the" block, and in particular, #attributes and
+      // #contextual_links is information about the *entire* block. Therefore,
+      // we must move these properties from $content and merge them into the
+      // top-level element.
+      foreach (['#attributes', '#contextual_links'] as $property) {
         if (isset($content[$property])) {
           $build[$property] += $content[$property];
           unset($content[$property]);
@@ -232,12 +197,12 @@ class BlockViewBuilder extends EntityViewBuilder {
     else {
       // Abort rendering: render as the empty string and ensure this block is
       // render cached, so we can avoid the work of having to repeatedly
-      // determine whether the block is empty. E.g. modifying or adding entities
-      // could cause the block to no longer be empty.
-      $build = array(
+      // determine whether the block is empty. For instance, modifying or adding
+      // entities could cause the block to no longer be empty.
+      $build = [
         '#markup' => '',
         '#cache' => $build['#cache'],
-      );
+      ];
       // If $content is not empty, then it contains cacheability metadata, and
       // we must merge it with the existing cacheability metadata. This allows
       // blocks to be empty, yet still bubble cacheability metadata, to indicate
@@ -249,6 +214,6 @@ class BlockViewBuilder extends EntityViewBuilder {
       }
     }
     return $build;
-   }
+  }
 
 }

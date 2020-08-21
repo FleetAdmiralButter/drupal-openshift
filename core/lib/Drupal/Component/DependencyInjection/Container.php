@@ -1,15 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Component\DependencyInjection\Container.
- */
-
 namespace Drupal\Component\DependencyInjection;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\DependencyInjection\IntrospectableContainerInterface;
-use Symfony\Component\DependencyInjection\ScopeInterface;
 use Symfony\Component\DependencyInjection\Exception\LogicException;
 use Symfony\Component\DependencyInjection\Exception\InvalidArgumentException;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException;
@@ -47,56 +40,55 @@ use Symfony\Component\DependencyInjection\Exception\ServiceCircularReferenceExce
  *   getAServiceWithAnIdByCamelCase().
  * - The function getServiceIds() was added as it has a use-case in core and
  *   contrib.
- * - Scopes are explicitly not allowed, because Symfony 2.8 has deprecated
- *   them and they will be removed in Symfony 3.0.
- * - Synchronized services are explicitly not supported, because Symfony 2.8 has
- *   deprecated them and they will be removed in Symfony 3.0.
+ *
+ * @todo Implement Symfony\Contracts\Service\ResetInterface once Symfony 4
+ *   is being used. See https://www.drupal.org/project/drupal/issues/3032605
  *
  * @ingroup container
  */
-class Container implements IntrospectableContainerInterface {
+class Container implements ContainerInterface {
 
   /**
    * The parameters of the container.
    *
    * @var array
    */
-  protected $parameters = array();
+  protected $parameters = [];
 
   /**
    * The aliases of the container.
    *
    * @var array
    */
-  protected $aliases = array();
+  protected $aliases = [];
 
   /**
    * The service definitions of the container.
    *
    * @var array
    */
-  protected $serviceDefinitions = array();
+  protected $serviceDefinitions = [];
 
   /**
    * The instantiated services.
    *
    * @var array
    */
-  protected $services = array();
+  protected $services = [];
 
   /**
    * The instantiated private services.
    *
    * @var array
    */
-  protected $privateServices = array();
+  protected $privateServices = [];
 
   /**
    * The currently loading services.
    *
    * @var array
    */
-  protected $loading = array();
+  protected $loading = [];
 
   /**
    * Whether the container parameters can still be changed.
@@ -120,14 +112,14 @@ class Container implements IntrospectableContainerInterface {
    *   - machine_format: Whether this container definition uses the optimized
    *     machine-readable container format.
    */
-  public function __construct(array $container_definition = array()) {
+  public function __construct(array $container_definition = []) {
     if (!empty($container_definition) && (!isset($container_definition['machine_format']) || $container_definition['machine_format'] !== TRUE)) {
       throw new InvalidArgumentException('The non-optimized format is not supported by this class. Use an optimized machine-readable format instead, e.g. as produced by \Drupal\Component\DependencyInjection\Dumper\OptimizedPhpArrayDumper.');
     }
 
-    $this->aliases = isset($container_definition['aliases']) ? $container_definition['aliases'] : array();
-    $this->parameters = isset($container_definition['parameters']) ? $container_definition['parameters'] : array();
-    $this->serviceDefinitions = isset($container_definition['services']) ? $container_definition['services'] : array();
+    $this->aliases = isset($container_definition['aliases']) ? $container_definition['aliases'] : [];
+    $this->parameters = isset($container_definition['parameters']) ? $container_definition['parameters'] : [];
+    $this->serviceDefinitions = isset($container_definition['services']) ? $container_definition['services'] : [];
     $this->frozen = isset($container_definition['frozen']) ? $container_definition['frozen'] : FALSE;
 
     // Register the service_container with itself.
@@ -155,7 +147,7 @@ class Container implements IntrospectableContainerInterface {
 
     if (!$definition && $invalid_behavior === ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE) {
       if (!$id) {
-        throw new ServiceNotFoundException($id);
+        throw new ServiceNotFoundException('');
       }
 
       throw new ServiceNotFoundException($id, NULL, NULL, $this->getServiceAlternatives($id));
@@ -182,11 +174,7 @@ class Container implements IntrospectableContainerInterface {
     }
     catch (\Exception $e) {
       unset($this->loading[$id]);
-
-      // Remove a potentially shared service that was constructed incompletely.
-      if (array_key_exists($id, $this->services)) {
-        unset($this->services[$id]);
-      }
+      unset($this->services[$id]);
 
       if (ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE !== $invalid_behavior) {
         return;
@@ -198,6 +186,22 @@ class Container implements IntrospectableContainerInterface {
     unset($this->loading[$id]);
 
     return $service;
+  }
+
+  /**
+   * Resets shared services from the container.
+   *
+   * The container is not intended to be used again after being reset in a
+   * normal workflow. This method is meant as a way to release references for
+   * ref-counting. A subsequent call to ContainerInterface::get() will recreate
+   * a new instance of the shared service.
+   */
+  public function reset() {
+    if (!empty($this->scopedServices)) {
+      throw new LogicException('Resetting the container is not allowed when a scope is active.');
+    }
+
+    $this->services = [];
   }
 
   /**
@@ -225,7 +229,7 @@ class Container implements IntrospectableContainerInterface {
       throw new RuntimeException(sprintf('You have requested a synthetic service ("%s"). The service container does not know how to construct this service. The service will need to be set before it is first used.', $id));
     }
 
-    $arguments = array();
+    $arguments = [];
     if (isset($definition['arguments'])) {
       $arguments = $definition['arguments'];
 
@@ -235,14 +239,14 @@ class Container implements IntrospectableContainerInterface {
     }
 
     if (isset($definition['file'])) {
-      $file = $this->frozen ? $definition['file'] : current($this->resolveServicesAndParameters(array($definition['file'])));
+      $file = $this->frozen ? $definition['file'] : current($this->resolveServicesAndParameters([$definition['file']]));
       require_once $file;
     }
 
     if (isset($definition['factory'])) {
       $factory = $definition['factory'];
       if (is_array($factory)) {
-        $factory = $this->resolveServicesAndParameters(array($factory[0], $factory[1]));
+        $factory = $this->resolveServicesAndParameters([$factory[0], $factory[1]]);
       }
       elseif (!is_string($factory)) {
         throw new RuntimeException(sprintf('Cannot create service "%s" because of invalid factory', $id));
@@ -251,82 +255,25 @@ class Container implements IntrospectableContainerInterface {
       $service = call_user_func_array($factory, $arguments);
     }
     else {
-      $class = $this->frozen ? $definition['class'] : current($this->resolveServicesAndParameters(array($definition['class'])));
-      $length = isset($definition['arguments_count']) ? $definition['arguments_count'] : count($arguments);
-
-      // Optimize class instantiation for services with up to 10 parameters as
-      // ReflectionClass is noticeably slow.
-      switch ($length) {
-        case 0:
-          $service = new $class();
-          break;
-
-        case 1:
-          $service = new $class($arguments[0]);
-          break;
-
-        case 2:
-          $service = new $class($arguments[0], $arguments[1]);
-          break;
-
-        case 3:
-          $service = new $class($arguments[0], $arguments[1], $arguments[2]);
-          break;
-
-        case 4:
-          $service = new $class($arguments[0], $arguments[1], $arguments[2], $arguments[3]);
-          break;
-
-        case 5:
-          $service = new $class($arguments[0], $arguments[1], $arguments[2], $arguments[3], $arguments[4]);
-          break;
-
-        case 6:
-          $service = new $class($arguments[0], $arguments[1], $arguments[2], $arguments[3], $arguments[4], $arguments[5]);
-          break;
-
-        case 7:
-          $service = new $class($arguments[0], $arguments[1], $arguments[2], $arguments[3], $arguments[4], $arguments[5], $arguments[6]);
-          break;
-
-        case 8:
-          $service = new $class($arguments[0], $arguments[1], $arguments[2], $arguments[3], $arguments[4], $arguments[5], $arguments[6], $arguments[7]);
-          break;
-
-        case 9:
-          $service = new $class($arguments[0], $arguments[1], $arguments[2], $arguments[3], $arguments[4], $arguments[5], $arguments[6], $arguments[7], $arguments[8]);
-          break;
-
-        case 10:
-          $service = new $class($arguments[0], $arguments[1], $arguments[2], $arguments[3], $arguments[4], $arguments[5], $arguments[6], $arguments[7], $arguments[8], $arguments[9]);
-          break;
-
-        default:
-          $r = new \ReflectionClass($class);
-          $service = $r->newInstanceArgs($arguments);
-          break;
-      }
+      $class = $this->frozen ? $definition['class'] : current($this->resolveServicesAndParameters([$definition['class']]));
+      $service = new $class(...$arguments);
     }
 
-    // Share the service if it is public.
-    if (!isset($definition['public']) || $definition['public'] !== FALSE) {
-      // Forward compatibility fix for Symfony 2.8 update.
-      if (!isset($definition['shared']) || $definition['shared'] !== FALSE) {
-        $this->services[$id] = $service;
-      }
+    if (!isset($definition['shared']) || $definition['shared'] !== FALSE) {
+      $this->services[$id] = $service;
     }
 
     if (isset($definition['calls'])) {
       foreach ($definition['calls'] as $call) {
         $method = $call[0];
-        $arguments = array();
+        $arguments = [];
         if (!empty($call[1])) {
           $arguments = $call[1];
           if ($arguments instanceof \stdClass) {
             $arguments = $this->resolveServicesAndParameters($arguments);
           }
         }
-        call_user_func_array(array($service, $method), $arguments);
+        call_user_func_array([$service, $method], $arguments);
       }
     }
 
@@ -358,7 +305,7 @@ class Container implements IntrospectableContainerInterface {
   /**
    * {@inheritdoc}
    */
-  public function set($id, $service, $scope = ContainerInterface::SCOPE_CONTAINER) {
+  public function set($id, $service) {
     $this->services[$id] = $service;
   }
 
@@ -366,7 +313,7 @@ class Container implements IntrospectableContainerInterface {
    * {@inheritdoc}
    */
   public function has($id) {
-    return isset($this->services[$id]) || isset($this->serviceDefinitions[$id]);
+    return isset($this->aliases[$id]) || isset($this->services[$id]) || isset($this->serviceDefinitions[$id]);
   }
 
   /**
@@ -375,7 +322,7 @@ class Container implements IntrospectableContainerInterface {
   public function getParameter($name) {
     if (!(isset($this->parameters[$name]) || array_key_exists($name, $this->parameters))) {
       if (!$name) {
-        throw new ParameterNotFoundException($name);
+        throw new ParameterNotFoundException('');
       }
 
       throw new ParameterNotFoundException($name, NULL, NULL, NULL, $this->getParameterAlternatives($name));
@@ -416,7 +363,7 @@ class Container implements IntrospectableContainerInterface {
   /**
    * Resolves arguments that represent services or variables to the real values.
    *
-   * @param array|\stdClass $arguments
+   * @param array|object $arguments
    *   The arguments to resolve.
    *
    * @return array
@@ -520,6 +467,11 @@ class Container implements IntrospectableContainerInterface {
 
           continue;
         }
+        elseif ($type == 'raw') {
+          $arguments[$key] = $argument->value;
+
+          continue;
+        }
 
         if ($type !== NULL) {
           throw new InvalidArgumentException(sprintf('Undefined type "%s" while resolving parameters and services.', $type));
@@ -542,7 +494,7 @@ class Container implements IntrospectableContainerInterface {
    *   An array of strings with suitable alternatives.
    */
   protected function getAlternatives($search_key, array $keys) {
-    $alternatives = array();
+    $alternatives = [];
     foreach ($keys as $key) {
       $lev = levenshtein($search_key, $key);
       if ($lev <= strlen($search_key) / 3 || strpos($key, $search_key) !== FALSE) {
@@ -580,42 +532,6 @@ class Container implements IntrospectableContainerInterface {
     return $this->getAlternatives($name, array_keys($this->parameters));
   }
 
-
-  /**
-   * {@inheritdoc}
-   */
-  public function enterScope($name) {
-    throw new \BadMethodCallException(sprintf("'%s' is not supported by Drupal 8.", __FUNCTION__));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function leaveScope($name) {
-    throw new \BadMethodCallException(sprintf("'%s' is not supported by Drupal 8.", __FUNCTION__));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function addScope(ScopeInterface $scope) {
-    throw new \BadMethodCallException(sprintf("'%s' is not supported by Drupal 8.", __FUNCTION__));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function hasScope($name) {
-    throw new \BadMethodCallException(sprintf("'%s' is not supported by Drupal 8.", __FUNCTION__));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isScopeActive($name) {
-    throw new \BadMethodCallException(sprintf("'%s' is not supported by Drupal 8.", __FUNCTION__));
-  }
-
   /**
    * Gets all defined service IDs.
    *
@@ -624,6 +540,12 @@ class Container implements IntrospectableContainerInterface {
    */
   public function getServiceIds() {
     return array_keys($this->serviceDefinitions + $this->services);
+  }
+
+  /**
+   * Ensure that cloning doesn't work.
+   */
+  private function __clone() {
   }
 
 }

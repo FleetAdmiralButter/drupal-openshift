@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Render\MetadataBubblingUrlGeneratorTest.
- */
-
 namespace Drupal\Tests\Core\Render;
 
 use Drupal\Core\Render\MetadataBubblingUrlGenerator;
@@ -23,7 +18,7 @@ class MetadataBubblingUrlGeneratorTest extends UrlGeneratorTest {
   /**
    * The renderer.
    *
-   * @var \Drupal\Core\Render\RendererInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Render\RendererInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $renderer;
 
@@ -33,7 +28,7 @@ class MetadataBubblingUrlGeneratorTest extends UrlGeneratorTest {
   protected function setUp() {
     parent::setUp();
 
-    $this->renderer = $this->getMock('\Drupal\Core\Render\RendererInterface');
+    $this->renderer = $this->createMock('\Drupal\Core\Render\RendererInterface');
     $this->renderer->expects($this->any())
       ->method('hasRenderContext')
       ->willReturn(TRUE);

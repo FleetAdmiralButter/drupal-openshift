@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\update\UpdateFetcher.
- */
-
 namespace Drupal\update;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -67,7 +62,7 @@ class UpdateFetcher implements UpdateFetcherInterface {
     $data = '';
     try {
       $data = (string) $this->httpClient
-        ->get($url, array('headers' => array('Accept' => 'text/xml')))
+        ->get($url, ['headers' => ['Accept' => 'text/xml']])
         ->getBody();
     }
     catch (RequestException $exception) {
@@ -82,7 +77,7 @@ class UpdateFetcher implements UpdateFetcherInterface {
   public function buildFetchUrl(array $project, $site_key = '') {
     $name = $project['name'];
     $url = $this->getFetchBaseUrl($project);
-    $url .= '/' . $name . '/' . \Drupal::CORE_COMPATIBILITY;
+    $url .= '/' . $name . '/current';
 
     // Only append usage information if we have a site key and the project is
     // enabled. We do not want to record usage statistics for disabled projects.

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Command\DbCommandBase.
- */
-
 namespace Drupal\Core\Command;
 
 use Drupal\Core\Database\Database;
@@ -31,6 +26,7 @@ class DbCommandBase extends Command {
    *
    * @param \Symfony\Component\Console\Input\InputInterface $input
    *   Input object.
+   *
    * @return \Drupal\Core\Database\Connection
    */
   protected function getDatabaseConnection(InputInterface $input) {

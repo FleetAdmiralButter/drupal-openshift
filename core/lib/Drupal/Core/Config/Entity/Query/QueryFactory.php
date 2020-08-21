@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Config\Entity\Query\QueryFactory.
- */
-
 namespace Drupal\Core\Config\Entity\Query;
 
 use Drupal\Core\Config\Config;
@@ -33,7 +28,7 @@ class QueryFactory implements QueryFactoryInterface, EventSubscriberInterface {
   /**
    * The config factory used by the config entity query.
    *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface;
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
 
@@ -71,8 +66,8 @@ class QueryFactory implements QueryFactoryInterface, EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-   public function getAggregate(EntityTypeInterface $entity_type, $conjunction) {
-      throw new QueryException('Aggregation over configuration entities is not supported');
+  public function getAggregate(EntityTypeInterface $entity_type, $conjunction) {
+    throw new QueryException('Aggregation over configuration entities is not supported');
   }
 
   /**
@@ -141,7 +136,7 @@ class QueryFactory implements QueryFactoryInterface, EventSubscriberInterface {
    *
    * @param \Drupal\Core\Config\Config $config
    *   The configuration object.
-   *  @param string $key
+   * @param string $key
    *   The configuration key to look for.
    * @param string $get_method
    *   Which method on the config object to call to get the value. Either 'get'
@@ -168,7 +163,7 @@ class QueryFactory implements QueryFactoryInterface, EventSubscriberInterface {
 
     $values = (array) $this->getValues($config, $parts[0], $get_method, $parts);
 
-    $output = array();
+    $output = [];
     // Flatten the array to a single dimension and add the key to all the
     // values.
     array_walk_recursive($values, function ($current) use (&$output, $key) {
@@ -194,7 +189,7 @@ class QueryFactory implements QueryFactoryInterface, EventSubscriberInterface {
    * @param int $start
    *   Which position of $parts we are processing. Defaults to 0.
    *
-   * @return array|NULL
+   * @return array|null
    *   The array of configuration values the match the provided key. NULL if
    *   the configuration object does not have a value that corresponds to the
    *   key.
@@ -224,14 +219,14 @@ class QueryFactory implements QueryFactoryInterface, EventSubscriberInterface {
   /**
    * Updates configuration entity in the key store.
    *
-   * @param ConfigCrudEvent $event
+   * @param \Drupal\Core\Config\ConfigCrudEvent $event
    *   The configuration event.
    */
   public function onConfigSave(ConfigCrudEvent $event) {
     $saved_config = $event->getConfig();
     $entity_type_id = $this->configManager->getEntityTypeIdByName($saved_config->getName());
     if ($entity_type_id) {
-      $entity_type = $this->configManager->getEntityManager()->getDefinition($entity_type_id);
+      $entity_type = $this->configManager->getEntityTypeManager()->getDefinition($entity_type_id);
       $this->updateConfigKeyStore($entity_type, $saved_config);
     }
   }
@@ -246,7 +241,7 @@ class QueryFactory implements QueryFactoryInterface, EventSubscriberInterface {
     $saved_config = $event->getConfig();
     $entity_type_id = $this->configManager->getEntityTypeIdByName($saved_config->getName());
     if ($entity_type_id) {
-      $entity_type = $this->configManager->getEntityManager()->getDefinition($entity_type_id);
+      $entity_type = $this->configManager->getEntityTypeManager()->getDefinition($entity_type_id);
       $this->deleteConfigKeyStore($entity_type, $saved_config);
     }
   }
@@ -254,9 +249,9 @@ class QueryFactory implements QueryFactoryInterface, EventSubscriberInterface {
   /**
    * {@inheritdoc}
    */
-  static function getSubscribedEvents() {
-    $events[ConfigEvents::SAVE][] = array('onConfigSave', 128);
-    $events[ConfigEvents::DELETE][] = array('onConfigDelete', 128);
+  public static function getSubscribedEvents() {
+    $events[ConfigEvents::SAVE][] = ['onConfigSave', 128];
+    $events[ConfigEvents::DELETE][] = ['onConfigDelete', 128];
     return $events;
   }
 

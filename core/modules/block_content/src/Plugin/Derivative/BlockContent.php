@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\block_content\Plugin\Derivative\BlockContent.
- */
-
 namespace Drupal\block_content\Plugin\Derivative;
 
 use Drupal\Component\Plugin\Derivative\DeriverBase;
@@ -38,9 +33,9 @@ class BlockContent extends DeriverBase implements ContainerDeriverInterface {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, $base_plugin_id) {
-    $entity_manager = $container->get('entity.manager');
+    $entity_type_manager = $container->get('entity_type.manager');
     return new static(
-      $entity_manager->getStorage('block_content')
+      $entity_type_manager->getStorage('block_content')
     );
   }
 
@@ -48,15 +43,18 @@ class BlockContent extends DeriverBase implements ContainerDeriverInterface {
    * {@inheritdoc}
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
-    $block_contents = $this->blockContentStorage->loadMultiple();
+    $block_contents = $this->blockContentStorage->loadByProperties(['reusable' => TRUE]);
+    // Reset the discovered definitions.
+    $this->derivatives = [];
     /** @var $block_content \Drupal\block_content\Entity\BlockContent */
     foreach ($block_contents as $block_content) {
       $this->derivatives[$block_content->uuid()] = $base_plugin_definition;
       $this->derivatives[$block_content->uuid()]['admin_label'] = $block_content->label();
-      $this->derivatives[$block_content->uuid()]['config_dependencies']['content'] = array(
-        $block_content->getConfigDependencyName()
-      );
+      $this->derivatives[$block_content->uuid()]['config_dependencies']['content'] = [
+        $block_content->getConfigDependencyName(),
+      ];
     }
     return parent::getDerivativeDefinitions($base_plugin_definition);
   }
+
 }

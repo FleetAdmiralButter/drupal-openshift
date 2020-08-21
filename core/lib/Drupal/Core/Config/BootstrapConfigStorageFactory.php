@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Config\BootstrapConfigStorageFactory.
- */
-
 namespace Drupal\Core\Config;
 
 use Drupal\Core\Database\Database;
@@ -53,7 +48,7 @@ class BootstrapConfigStorageFactory {
    *
    * @return \Drupal\Core\Config\FileStorage
    *
-   * @deprecated in Drupal 8.0.x and will be removed before 9.0.0. Drupal core
+   * @deprecated in drupal:8.0.0 and is removed from drupal:9.0.0. Drupal core
    * no longer creates an active directory.
    *
    * @throws \Exception
@@ -61,4 +56,5 @@ class BootstrapConfigStorageFactory {
   public static function getFileStorage() {
     return new FileStorage(config_get_config_directory(CONFIG_ACTIVE_DIRECTORY));
   }
+
 }

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Entity\EntityDeleteFormTrait.
- */
-
 namespace Drupal\Core\Entity;
 
 use Drupal\Core\Config\Entity\ConfigDependencyDeleteFormTrait;
@@ -49,10 +44,10 @@ trait EntityDeleteFormTrait {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to delete the @entity-type %label?', array(
-      '@entity-type' => $this->getEntity()->getEntityType()->getLowercaseLabel(),
+    return $this->t('Are you sure you want to delete the @entity-type %label?', [
+      '@entity-type' => $this->getEntity()->getEntityType()->getSingularLabel(),
       '%label' => $this->getEntity()->label(),
-    ));
+    ]);
   }
 
   /**
@@ -70,10 +65,10 @@ trait EntityDeleteFormTrait {
    */
   protected function getDeletionMessage() {
     $entity = $this->getEntity();
-    return $this->t('The @entity-type %label has been deleted.', array(
-      '@entity-type' => $entity->getEntityType()->getLowercaseLabel(),
+    return $this->t('The @entity-type %label has been deleted.', [
+      '@entity-type' => $entity->getEntityType()->getSingularLabel(),
       '%label' => $entity->label(),
-    ));
+    ]);
   }
 
   /**
@@ -83,11 +78,11 @@ trait EntityDeleteFormTrait {
     $entity = $this->getEntity();
     if ($entity->hasLinkTemplate('collection')) {
       // If available, return the collection URL.
-      return $entity->urlInfo('collection');
+      return $entity->toUrl('collection');
     }
     else {
       // Otherwise fall back to the default link template.
-      return $entity->urlInfo();
+      return $entity->toUrl();
     }
   }
 
@@ -101,7 +96,7 @@ trait EntityDeleteFormTrait {
     $entity = $this->getEntity();
     if ($entity->hasLinkTemplate('collection')) {
       // If available, return the collection URL.
-      return $entity->urlInfo('collection');
+      return $entity->toUrl('collection');
     }
     else {
       // Otherwise fall back to the front page.
@@ -114,10 +109,10 @@ trait EntityDeleteFormTrait {
    */
   protected function logDeletionMessage() {
     $entity = $this->getEntity();
-    $this->logger($entity->getEntityType()->getProvider())->notice('The @entity-type %label has been deleted.', array(
-      '@entity-type' => $entity->getEntityType()->getLowercaseLabel(),
+    $this->logger($entity->getEntityType()->getProvider())->notice('The @entity-type %label has been deleted.', [
+      '@entity-type' => $entity->getEntityType()->getSingularLabel(),
       '%label' => $entity->label(),
-    ));
+    ]);
   }
 
   /**
@@ -125,7 +120,7 @@ trait EntityDeleteFormTrait {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->getEntity()->delete();
-    drupal_set_message($this->getDeletionMessage());
+    $this->messenger()->addStatus($this->getDeletionMessage());
     $form_state->setRedirectUrl($this->getCancelUrl());
     $this->logDeletionMessage();
   }

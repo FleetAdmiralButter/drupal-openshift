@@ -1,12 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Component\DependencyInjection\Dumper\OptimizedPhpArrayDumper.
- */
-
 namespace Drupal\Component\DependencyInjection\Dumper;
 
+use Drupal\Component\Utility\Crypt;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Parameter;
@@ -51,9 +47,16 @@ class OptimizedPhpArrayDumper extends Dumper {
   protected $serialize = TRUE;
 
   /**
+   * A list of container aliases.
+   *
+   * @var array
+   */
+  protected $aliases;
+
+  /**
    * {@inheritdoc}
    */
-  public function dump(array $options = array()) {
+  public function dump(array $options = []) {
     return serialize($this->getArray());
   }
 
@@ -64,11 +67,13 @@ class OptimizedPhpArrayDumper extends Dumper {
    *   A PHP array representation of the service container.
    */
   public function getArray() {
-    $definition = array();
-    $definition['aliases'] = $this->getAliases();
+    $definition = [];
+    // Warm aliases first.
+    $this->aliases = $this->getAliases();
+    $definition['aliases'] = $this->aliases;
     $definition['parameters'] = $this->getParameters();
     $definition['services'] = $this->getServiceDefinitions();
-    $definition['frozen'] = $this->container->isFrozen();
+    $definition['frozen'] = $this->container->isCompiled();
     $definition['machine_format'] = $this->supportsMachineFormat();
     return $definition;
   }
@@ -80,7 +85,7 @@ class OptimizedPhpArrayDumper extends Dumper {
    *   The aliases.
    */
   protected function getAliases() {
-    $alias_definitions = array();
+    $alias_definitions = [];
 
     $aliases = $this->container->getAliases();
     foreach ($aliases as $alias => $id) {
@@ -102,12 +107,12 @@ class OptimizedPhpArrayDumper extends Dumper {
    */
   protected function getParameters() {
     if (!$this->container->getParameterBag()->all()) {
-      return array();
+      return [];
     }
 
     $parameters = $this->container->getParameterBag()->all();
-    $is_frozen = $this->container->isFrozen();
-    return $this->prepareParameters($parameters, $is_frozen);
+    $is_compiled = $this->container->isCompiled();
+    return $this->prepareParameters($parameters, $is_compiled);
   }
 
   /**
@@ -118,10 +123,10 @@ class OptimizedPhpArrayDumper extends Dumper {
    */
   protected function getServiceDefinitions() {
     if (!$this->container->getDefinitions()) {
-      return array();
+      return [];
     }
 
-    $services = array();
+    $services = [];
     foreach ($this->container->getDefinitions() as $id => $definition) {
       // Only store public service definitions, references to shared private
       // services are handled in ::getReferenceCall().
@@ -146,7 +151,7 @@ class OptimizedPhpArrayDumper extends Dumper {
    *   An array of prepared parameters.
    */
   protected function prepareParameters(array $parameters, $escape = TRUE) {
-    $filtered = array();
+    $filtered = [];
     foreach ($parameters as $key => $value) {
       if (is_array($value)) {
         $value = $this->prepareParameters($value, $escape);
@@ -171,7 +176,7 @@ class OptimizedPhpArrayDumper extends Dumper {
    *   The escaped parameters.
    */
   protected function escape(array $parameters) {
-    $args = array();
+    $args = [];
 
     foreach ($parameters as $key => $value) {
       if (is_array($value)) {
@@ -202,7 +207,7 @@ class OptimizedPhpArrayDumper extends Dumper {
    *   scope different from SCOPE_CONTAINER and SCOPE_PROTOTYPE.
    */
   protected function getServiceDefinition(Definition $definition) {
-    $service = array();
+    $service = [];
     if ($definition->getClass()) {
       $service['class'] = $definition->getClass();
     }
@@ -240,16 +245,9 @@ class OptimizedPhpArrayDumper extends Dumper {
       $service['calls'] = $this->dumpMethodCalls($definition->getMethodCalls());
     }
 
-    if (($scope = $definition->getScope()) !== ContainerInterface::SCOPE_CONTAINER) {
-      if ($scope === ContainerInterface::SCOPE_PROTOTYPE) {
-        // Scope prototype has been replaced with 'shared' => FALSE.
-        // This is a Symfony 2.8 forward compatibility fix.
-        // Reference: https://github.com/symfony/symfony/blob/2.8/UPGRADE-2.8.md#dependencyinjection
-        $service['shared'] = FALSE;
-      }
-      else {
-        throw new InvalidArgumentException("The 'scope' definition is deprecated in Symfony 3.0 and not supported by Drupal 8.");
-      }
+    // By default services are shared, so just provide the flag, when needed.
+    if ($definition->isShared() === FALSE) {
+      $service['shared'] = $definition->isShared();
     }
 
     if (($decorated = $definition->getDecoratedService()) !== NULL) {
@@ -277,11 +275,11 @@ class OptimizedPhpArrayDumper extends Dumper {
    *   The PHP array representation of the method calls.
    */
   protected function dumpMethodCalls(array $calls) {
-    $code = array();
+    $code = [];
 
     foreach ($calls as $key => $call) {
       $method = $call[0];
-      $arguments = array();
+      $arguments = [];
       if (!empty($call[1])) {
         $arguments = $this->dumpCollection($call[1]);
       }
@@ -291,7 +289,6 @@ class OptimizedPhpArrayDumper extends Dumper {
 
     return $code;
   }
-
 
   /**
    * Dumps a collection to a PHP array.
@@ -303,11 +300,11 @@ class OptimizedPhpArrayDumper extends Dumper {
    *   collection needed to be resolved or not. This is used for optimizing
    *   deep arrays that don't need to be traversed.
    *
-   * @return \stdClass|array
+   * @return object|array
    *   The collection in a suitable format.
    */
   protected function dumpCollection($collection, &$resolve = FALSE) {
-    $code = array();
+    $code = [];
 
     foreach ($collection as $key => $value) {
       if (is_array($value)) {
@@ -319,10 +316,10 @@ class OptimizedPhpArrayDumper extends Dumper {
         }
       }
       else {
-        if (is_object($value)) {
+        $code[$key] = $this->dumpValue($value);
+        if (is_object($code[$key])) {
           $resolve = TRUE;
         }
-        $code[$key] = $this->dumpValue($value);
       }
     }
 
@@ -330,11 +327,11 @@ class OptimizedPhpArrayDumper extends Dumper {
       return $collection;
     }
 
-    return (object) array(
+    return (object) [
       'type' => 'collection',
       'value' => $code,
       'resolve' => $resolve,
-    );
+    ];
   }
 
   /**
@@ -349,7 +346,7 @@ class OptimizedPhpArrayDumper extends Dumper {
   protected function dumpCallable($callable) {
     if (is_array($callable)) {
       $callable[0] = $this->dumpValue($callable[0]);
-      $callable = array($callable[0], $callable[1]);
+      $callable = [$callable[0], $callable[1]];
     }
 
     return $callable;
@@ -366,21 +363,21 @@ class OptimizedPhpArrayDumper extends Dumper {
    *   (optional) Whether the service will be shared with others.
    *   By default this parameter is FALSE.
    *
-   * @return \stdClass
+   * @return object
    *   A very lightweight private service value object.
    */
   protected function getPrivateServiceCall($id, Definition $definition, $shared = FALSE) {
     $service_definition = $this->getServiceDefinition($definition);
     if (!$id) {
-      $hash = hash('sha1', serialize($service_definition));
+      $hash = Crypt::hashBase64(serialize($service_definition));
       $id = 'private__' . $hash;
     }
-    return (object) array(
+    return (object) [
       'type' => 'private_service',
       'id' => $id,
       'value' => $service_definition,
       'shared' => $shared,
-    );
+    ];
   }
 
   /**
@@ -392,12 +389,12 @@ class OptimizedPhpArrayDumper extends Dumper {
    * @return mixed
    *   The dumped value in a suitable format.
    *
-   * @throws RuntimeException
+   * @throws \Symfony\Component\DependencyInjection\Exception\RuntimeException
    *   When trying to dump object or resource.
    */
   protected function dumpValue($value) {
     if (is_array($value)) {
-      $code = array();
+      $code = [];
       foreach ($value as $k => $v) {
         $code[$k] = $this->dumpValue($v);
       }
@@ -412,6 +409,23 @@ class OptimizedPhpArrayDumper extends Dumper {
     }
     elseif ($value instanceof Parameter) {
       return $this->getParameterCall((string) $value);
+    }
+    elseif (is_string($value) && FALSE !== strpos($value, '%')) {
+      if (preg_match('/^%([^%]+)%$/', $value, $matches)) {
+        return $this->getParameterCall($matches[1]);
+      }
+      else {
+        $replaceParameters = function ($matches) {
+          return $this->getParameterCall($matches[2]);
+        };
+
+        // We cannot directly return the string value because it would
+        // potentially not always be resolved in the dumpCollection() method.
+        return (object) [
+          'type' => 'raw',
+          'value' => str_replace('%%', '%', preg_replace_callback('/(?<!%)(%)([^%]+)\1/', $replaceParameters, $value)),
+        ];
+      }
     }
     elseif ($value instanceof Expression) {
       throw new RuntimeException('Unable to use expressions as the Symfony ExpressionLanguage component is not installed.');
@@ -439,11 +453,11 @@ class OptimizedPhpArrayDumper extends Dumper {
    *
    * @param string $id
    *   The ID of the service to get a reference for.
-   * @param \Symfony\Component\DependencyInjection\Reference|NULL $reference
+   * @param \Symfony\Component\DependencyInjection\Reference|null $reference
    *   (optional) The reference object to process; needed to get the invalid
    *   behavior value.
    *
-   * @return string|\stdClass
+   * @return string|object
    *   A suitable representation of the service reference.
    */
   protected function getReferenceCall($id, Reference $reference = NULL) {
@@ -454,6 +468,9 @@ class OptimizedPhpArrayDumper extends Dumper {
     }
 
     // Private shared service.
+    if (isset($this->aliases[$id])) {
+      $id = $this->aliases[$id];
+    }
     $definition = $this->container->getDefinition($id);
     if (!$definition->isPublic()) {
       // The ContainerBuilder does not share a private service, but this means a
@@ -473,15 +490,15 @@ class OptimizedPhpArrayDumper extends Dumper {
    * @param int $invalid_behavior
    *   (optional) The invalid behavior of the service.
    *
-   * @return string|\stdClass
+   * @return string|object
    *   A suitable representation of the service reference.
    */
   protected function getServiceCall($id, $invalid_behavior = ContainerInterface::EXCEPTION_ON_INVALID_REFERENCE) {
-    return (object) array(
+    return (object) [
       'type' => 'service',
       'id' => $id,
       'invalidBehavior' => $invalid_behavior,
-    );
+    ];
   }
 
   /**
@@ -490,14 +507,14 @@ class OptimizedPhpArrayDumper extends Dumper {
    * @param string $name
    *   The name of the parameter to get a reference for.
    *
-   * @return string|\stdClass
+   * @return string|object
    *   A suitable representation of the parameter reference.
    */
   protected function getParameterCall($name) {
-    return (object) array(
+    return (object) [
       'type' => 'parameter',
       'name' => $name,
-    );
+    ];
   }
 
   /**

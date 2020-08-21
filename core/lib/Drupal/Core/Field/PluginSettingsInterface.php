@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Field\PluginSettingsInterface.
- */
-
 namespace Drupal\Core\Field;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
@@ -12,6 +7,9 @@ use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 
 /**
  * Interface definition for plugin with settings.
+ *
+ * @todo Merge into \Drupal\Component\Plugin\ConfigurableInterface. See
+ *   https://www.drupal.org/project/drupal/issues/1764380
  */
 interface PluginSettingsInterface extends PluginInspectionInterface, ThirdPartySettingsInterface {
 

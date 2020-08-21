@@ -13,11 +13,6 @@ function views_install() {
 }
 
 /**
- * @addtogroup updates-8.0.0-beta
- * @{
- */
-
-/**
  * Update views field plugins.
  */
 function views_update_8001(&$sandbox) {
@@ -311,23 +306,99 @@ function _views_update_argument_map($displays) {
 }
 
 /**
- * @} End of "addtogroup updates-8.0.0-beta".
- */
-
-/**
- * @addtogroup updates-8.0.0-rc
- * @{
- */
-
-/**
  * Clear caches to fix entity operations field.
  */
 function views_update_8003() {
   // Empty update to cause a cache flush so that views data is rebuilt. Entity
   // types that don't implement a list builder cannot have the entity operations
   // field.
+
+  // Use hook_post_update_NAME() instead to clear the cache.The use
+  // of hook_update_N to clear the cache has been deprecated see
+  // https://www.drupal.org/node/2960601 for more details.
 }
 
 /**
- * @} End of "addtogroup updates-8.0.0-rc".
+ * Clear caches due to updated entity views data.
  */
+function views_update_8004() {
+  // Empty update to cause a cache flush so that views data is rebuilt.
+
+  // Use hook_post_update_NAME() instead to clear the cache.The use
+  // of hook_update_N to clear the cache has been deprecated see
+  // https://www.drupal.org/node/2960601 for more details.
+}
+
+/**
+ * Clear views data cache.
+ */
+function views_update_8005() {
+  // Empty update function to rebuild the views data.
+
+  // Use hook_post_update_NAME() instead to clear the cache.The use
+  // of hook_update_N to clear the cache has been deprecated see
+  // https://www.drupal.org/node/2960601 for more details.
+}
+
+/**
+ * Clear caches due to updated entity views data.
+ */
+function views_update_8100() {
+  // Empty update to cause a cache flush so that views data is rebuilt.
+
+  // Use hook_post_update_NAME() instead to clear the cache.The use
+  // of hook_update_N to clear the cache has been deprecated see
+  // https://www.drupal.org/node/2960601 for more details.
+}
+
+/**
+ * Set default values for enabled/expanded flag on page displays.
+ */
+function views_update_8101() {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('views.view.') as $view_config_name) {
+    $view = $config_factory->getEditable($view_config_name);
+    $save = FALSE;
+    foreach ($view->get('display') as $display_id => $display) {
+      if ($display['display_plugin'] == 'page') {
+        $display['display_options']['menu']['enabled'] = TRUE;
+        $display['display_options']['menu']['expanded'] = FALSE;
+        $view->set("display.$display_id", $display);
+        $save = TRUE;
+      }
+    }
+    if ($save) {
+      $view->save();
+    }
+  }
+}
+
+/**
+ * Rebuild the container to add a new container parameter.
+ */
+function views_update_8200() {
+  // Empty update to cause a cache rebuild so that the container is rebuilt.
+
+  // Use hook_post_update_NAME() instead to clear the cache.The use
+  // of hook_update_N to clear the cache has been deprecated see
+  // https://www.drupal.org/node/2960601 for more details.
+}
+
+/**
+ * Rebuild cache to refresh the views config schema.
+ */
+function views_update_8201() {
+  // Empty update to cause a cache rebuild so that config schema get refreshed.
+
+  // Use hook_post_update_NAME() instead to clear the cache.The use
+  // of hook_update_N to clear the cache has been deprecated see
+  // https://www.drupal.org/node/2960601 for more details.
+}
+
+/**
+ * Update field names for multi-value base fields.
+ */
+function views_update_8500() {
+  // This update has been replaced by
+  // views_post_update_field_names_for_multivalue_fields().
+}

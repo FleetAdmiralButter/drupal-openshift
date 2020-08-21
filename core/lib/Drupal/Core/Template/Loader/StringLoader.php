@@ -1,11 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Template\Loader\StringLoader.
- */
-
 namespace Drupal\Core\Template\Loader;
+
+use Twig\Loader\ExistsLoaderInterface;
+use Twig\Loader\SourceContextLoaderInterface;
+use Twig\Source;
 
 /**
  * Loads string templates, also known as inline templates.
@@ -25,7 +24,7 @@ namespace Drupal\Core\Template\Loader;
  * @see \Drupal\Core\Render\Element\InlineTemplate
  * @see twig_render_template()
  */
-class StringLoader implements \Twig_LoaderInterface, \Twig_ExistsLoaderInterface {
+class StringLoader implements \Twig_LoaderInterface, ExistsLoaderInterface, SourceContextLoaderInterface {
 
   /**
    * {@inheritdoc}
@@ -57,7 +56,15 @@ class StringLoader implements \Twig_LoaderInterface, \Twig_ExistsLoaderInterface
    * {@inheritdoc}
    */
   public function isFresh($name, $time) {
-    return true;
+    return TRUE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSourceContext($name) {
+    $name = (string) $name;
+    return new Source($name, $name);
   }
 
 }

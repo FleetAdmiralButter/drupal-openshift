@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\locale\EventSubscriber\LocaleTranslationCacheTag.
- */
-
 namespace Drupal\locale\EventSubscriber;
 
 use Drupal\Core\Cache\CacheTagsInvalidatorInterface;
@@ -37,7 +32,7 @@ class LocaleTranslationCacheTag implements EventSubscriberInterface {
    * Invalidate cache tags whenever a string is translated.
    */
   public function saveTranslation() {
-    $this->cacheTagsInvalidator->invalidateTags(['rendered', 'locale']);
+    $this->cacheTagsInvalidator->invalidateTags(['rendered', 'locale', 'library_info']);
   }
 
   /**

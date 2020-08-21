@@ -11,7 +11,7 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\Context\ContextCacheKeys;
 use Drupal\Core\Cache\MemoryBackend;
-use Drupal\Core\Render\Element;
+use Drupal\Core\Security\TrustedCallbackInterface;
 use Drupal\Core\Render\PlaceholderGenerator;
 use Drupal\Core\Render\PlaceholderingRenderCache;
 use Drupal\Core\Render\Renderer;
@@ -23,7 +23,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 /**
  * Base class for the actual unit tests testing \Drupal\Core\Render\Renderer.
  */
-class RendererTestBase extends UnitTestCase {
+abstract class RendererTestBase extends UnitTestCase {
 
   /**
    * The tested renderer.
@@ -52,33 +52,33 @@ class RendererTestBase extends UnitTestCase {
   protected $requestStack;
 
   /**
-   * @var \Drupal\Core\Cache\CacheFactoryInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Cache\CacheFactoryInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $cacheFactory;
 
   /**
-   * @var \Drupal\Core\Cache\Context\CacheContextsManager|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Cache\Context\CacheContextsManager|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $cacheContexts;
 
   /**
    * The mocked controller resolver.
    *
-   * @var \Drupal\Core\Controller\ControllerResolverInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Controller\ControllerResolverInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $controllerResolver;
 
   /**
    * The mocked theme manager.
    *
-   * @var \Drupal\Core\Theme\ThemeManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Theme\ThemeManagerInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $themeManager;
 
   /**
    * The mocked element info.
    *
-   * @var \Drupal\Core\Render\ElementInfoManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Render\ElementInfoManagerInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $elementInfo;
 
@@ -107,7 +107,7 @@ class RendererTestBase extends UnitTestCase {
     'auto_placeholder_conditions' => [
       'max-age' => 0,
       'contexts' => ['session', 'user'],
-      'tags' =>  ['current-temperature'],
+      'tags' => ['current-temperature'],
     ],
   ];
 
@@ -117,9 +117,9 @@ class RendererTestBase extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->controllerResolver = $this->getMock('Drupal\Core\Controller\ControllerResolverInterface');
-    $this->themeManager = $this->getMock('Drupal\Core\Theme\ThemeManagerInterface');
-    $this->elementInfo = $this->getMock('Drupal\Core\Render\ElementInfoManagerInterface');
+    $this->controllerResolver = $this->createMock('Drupal\Core\Controller\ControllerResolverInterface');
+    $this->themeManager = $this->createMock('Drupal\Core\Theme\ThemeManagerInterface');
+    $this->elementInfo = $this->createMock('Drupal\Core\Render\ElementInfoManagerInterface');
     $this->elementInfo->expects($this->any())
       ->method('getInfo')
       ->willReturnCallback(function ($type) {
@@ -127,9 +127,11 @@ class RendererTestBase extends UnitTestCase {
           case 'details':
             $info = ['#theme_wrappers' => ['details']];
             break;
+
           case 'link':
             $info = ['#theme' => 'link'];
             break;
+
           default:
             $info = [];
         }
@@ -140,7 +142,7 @@ class RendererTestBase extends UnitTestCase {
     $request = new Request();
     $request->server->set('REQUEST_TIME', $_SERVER['REQUEST_TIME']);
     $this->requestStack->push($request);
-    $this->cacheFactory = $this->getMock('Drupal\Core\Cache\CacheFactoryInterface');
+    $this->cacheFactory = $this->createMock('Drupal\Core\Cache\CacheFactoryInterface');
     $this->cacheContextsManager = $this->getMockBuilder('Drupal\Core\Cache\Context\CacheContextsManager')
       ->disableOriginalConstructor()
       ->getMock();
@@ -148,19 +150,22 @@ class RendererTestBase extends UnitTestCase {
     $current_user_role = &$this->currentUserRole;
     $this->cacheContextsManager->expects($this->any())
       ->method('convertTokensToKeys')
-      ->willReturnCallback(function($context_tokens) use (&$current_user_role) {
+      ->willReturnCallback(function ($context_tokens) use (&$current_user_role) {
         $keys = [];
         foreach ($context_tokens as $context_id) {
           switch ($context_id) {
             case 'user.roles':
               $keys[] = 'r.' . $current_user_role;
               break;
+
             case 'languages:language_interface':
               $keys[] = 'en';
               break;
+
             case 'theme':
               $keys[] = 'stark';
               break;
+
             default:
               $keys[] = $context_id;
           }
@@ -209,7 +214,7 @@ class RendererTestBase extends UnitTestCase {
    * Sets up a memory-based render cache back-end.
    */
   protected function setupMemoryCache() {
-    $this->memoryCache = $this->memoryCache ?: new MemoryBackend('render');
+    $this->memoryCache = $this->memoryCache ?: new MemoryBackend();
 
     $this->cacheFactory->expects($this->atLeastOnce())
       ->method('get')
@@ -253,13 +258,13 @@ class RendererTestBase extends UnitTestCase {
 }
 
 
-class PlaceholdersTest {
+class PlaceholdersTest implements TrustedCallbackInterface {
 
   /**
    * #lazy_builder callback; attaches setting, generates markup.
    *
    * @param string $animal
-   *  An animal.
+   *   An animal.
    *
    * @return array
    *   A renderable array.
@@ -283,7 +288,7 @@ class PlaceholdersTest {
    * #lazy_builder callback; attaches setting, generates markup, user-specific.
    *
    * @param string $animal
-   *  An animal.
+   *   An animal.
    *
    * @return array
    *   A renderable array.
@@ -298,7 +303,7 @@ class PlaceholdersTest {
    * #lazy_builder callback; attaches setting, generates markup, cache tag.
    *
    * @param string $animal
-   *  An animal.
+   *   An animal.
    *
    * @return array
    *   A renderable array.
@@ -307,6 +312,13 @@ class PlaceholdersTest {
     $build = static::callback($animal);
     $build['#cache']['tags'][] = 'current-temperature';
     return $build;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function trustedCallbacks() {
+    return ['callbackTagCurrentTemperature', 'callbackPerUser', 'callback'];
   }
 
 }

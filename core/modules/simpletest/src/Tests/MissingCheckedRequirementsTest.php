@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\simpletest\Tests\MissingCheckedRequirementsTest.
- */
-
 namespace Drupal\simpletest\Tests;
 
 use Drupal\simpletest\WebTestBase;
@@ -13,6 +8,8 @@ use Drupal\simpletest\WebTestBase;
  * Tests a test case with missing requirements.
  *
  * @group simpletest
+ * @group WebTestBase
+ * @group legacy
  */
 class MissingCheckedRequirementsTest extends WebTestBase {
 
@@ -21,11 +18,11 @@ class MissingCheckedRequirementsTest extends WebTestBase {
    *
    * @var array
    */
-  public static $modules = array('simpletest');
+  public static $modules = ['simpletest'];
 
   protected function setUp() {
     parent::setUp();
-    $admin_user = $this->drupalCreateUser(array('administer unit tests'));
+    $admin_user = $this->drupalCreateUser(['administer unit tests']);
     $this->drupalLogin($admin_user);
   }
 
@@ -34,9 +31,9 @@ class MissingCheckedRequirementsTest extends WebTestBase {
    */
   protected function checkRequirements() {
     if ($this->isInChildSite()) {
-      return array(
-        'Test is not allowed to run.'
-      );
+      return [
+        'Test is not allowed to run.',
+      ];
     }
     return parent::checkRequirements();
   }
@@ -58,4 +55,5 @@ class MissingCheckedRequirementsTest extends WebTestBase {
       $this->fail('Test ran when it failed requirements check.');
     }
   }
+
 }

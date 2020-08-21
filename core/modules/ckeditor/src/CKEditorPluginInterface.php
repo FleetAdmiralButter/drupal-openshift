@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\ckeditor\CKEditorPluginInterface.
- */
-
 namespace Drupal\ckeditor;
 
 use Drupal\Component\Plugin\PluginInspectionInterface;
@@ -28,6 +23,7 @@ use Drupal\editor\Entity\Editor;
  * @see \Drupal\ckeditor\CKEditorPluginButtonsInterface
  * @see \Drupal\ckeditor\CKEditorPluginContextualInterface
  * @see \Drupal\ckeditor\CKEditorPluginConfigurableInterface
+ * @see \Drupal\ckeditor\CKEditorPluginCssInterface
  * @see \Drupal\ckeditor\CKEditorPluginBase
  * @see \Drupal\ckeditor\CKEditorPluginManager
  * @see \Drupal\ckeditor\Annotation\CKEditorPlugin
@@ -49,6 +45,7 @@ interface CKEditorPluginInterface extends PluginInspectionInterface {
    *
    * @param \Drupal\editor\Entity\Editor $editor
    *   A configured text editor object.
+   *
    * @return array
    *   An unindexed array of plugin names this plugin requires. Each plugin is
    *   is identified by its annotated ID.
@@ -63,6 +60,7 @@ interface CKEditorPluginInterface extends PluginInspectionInterface {
    *
    * @param \Drupal\editor\Entity\Editor $editor
    *   A configured text editor object.
+   *
    * @return array
    *   An array of libraries suitable for usage in a render API #attached
    *   property.
@@ -72,10 +70,10 @@ interface CKEditorPluginInterface extends PluginInspectionInterface {
   /**
    * Returns the Drupal root-relative file path to the plugin JavaScript file.
    *
-   * Note: this does not use a Drupal library because this uses CKEditor's API,
-   * see http://docs.cksource.com/ckeditor_api/symbols/CKEDITOR.resourceManager.html#addExternal.
+   * Note: this does not use a Drupal library because this uses CKEditor's API.
+   * @see https://ckeditor.com/docs/ckeditor4/latest/api/CKEDITOR_resourceManager.html#method-addExternal
    *
-   * @return string|FALSE
+   * @return string|false
    *   The Drupal root-relative path to the file, FALSE if an internal plugin.
    */
   public function getFile();
@@ -95,8 +93,10 @@ interface CKEditorPluginInterface extends PluginInspectionInterface {
    *
    * @param \Drupal\editor\Entity\Editor $editor
    *   A configured text editor object.
+   *
    * @return array
    *   A keyed array, whose keys will end up as keys under CKEDITOR.config.
    */
   public function getConfig(Editor $editor);
+
 }

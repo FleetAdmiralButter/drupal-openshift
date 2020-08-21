@@ -66,18 +66,18 @@ field.value.link:
       mapping:
         query:
           type: sequence
-          label: 'Url query key value pairs'
+          label: 'URL query key value pairs'
           sequence:
             type: string
         fragment:
           type: string
-          label: 'Url fragment'
+          label: 'URL fragment'
         absolute:
           type: boolean
-          label: 'Is this Url absolute'
+          label: 'Whether to force the output to be an absolute link (beginning with http: or https:)'
         https:
           type: boolean
-          label: 'If the Url should use a secure protocol'
+          label: 'Whether to force this URL to point to a secure location (beginning with https:)'
         attributes:
           type: sequence
           label: 'Link attributes'

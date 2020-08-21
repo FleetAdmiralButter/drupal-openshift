@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Block\Annotation\Block.
- */
-
 namespace Drupal\Core\Block\Annotation;
 
 use Drupal\Component\Annotation\Plugin;
@@ -44,10 +39,25 @@ class Block extends Plugin {
   public $category = '';
 
   /**
-   * Class used to retrieve derivative definitions of the block.
+   * An array of context definitions describing the context used by the plugin.
    *
-   * @var string
+   * The array is keyed by context names.
+   *
+   * @var \Drupal\Core\Annotation\ContextDefinition[]
+   *
+   * @deprecated Providing context definitions via the "context" key is
+   *   deprecated in Drupal 8.7.x and will be removed before Drupal 9.0.0. Use
+   *   the "context_definitions" key instead.
    */
-  public $derivative = '';
+  public $context = [];
+
+  /**
+   * An array of context definitions describing the context used by the plugin.
+   *
+   * The array is keyed by context names.
+   *
+   * @var \Drupal\Core\Annotation\ContextDefinition[]
+   */
+  public $context_definitions = [];
 
 }

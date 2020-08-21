@@ -10,7 +10,6 @@ description: ''
 tag: ''
 base_table: users_field_data
 base_field: uid
-core: 8.x
 display:
   default:
     display_plugin: default
@@ -142,7 +141,7 @@ display:
           plugin_id: user_roles
       filters:
         status:
-          value: true
+          value: '1'
           table: users_field_data
           field: status
           id: status

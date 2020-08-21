@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\file\FileInterface.
- */
-
 namespace Drupal\file;
 
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -13,6 +8,8 @@ use Drupal\Core\Entity\EntityChangedInterface;
 
 /**
  * Defines getter and setter methods for file entity base fields.
+ *
+ * @ingroup file
  */
 interface FileInterface extends ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
 
@@ -52,6 +49,20 @@ interface FileInterface extends ContentEntityInterface, EntityChangedInterface, 
    *   the location of the file.
    */
   public function setFileUri($uri);
+
+  /**
+   * Creates a file URL for the URI of this file.
+   *
+   * @param bool $relative
+   *   (optional) Whether the URL should be root-relative, defaults to TRUE.
+   *
+   * @return string
+   *   A string containing a URL that may be used to access the file.
+   *
+   * @see file_create_url()
+   * @see file_url_transform_relative()
+   */
+  public function createFileUrl($relative = TRUE);
 
   /**
    * Returns the MIME type of the file.
@@ -118,4 +129,5 @@ interface FileInterface extends ContentEntityInterface, EntityChangedInterface, 
    *   Creation timestamp of the file entity.
    */
   public function getCreatedTime();
+
 }

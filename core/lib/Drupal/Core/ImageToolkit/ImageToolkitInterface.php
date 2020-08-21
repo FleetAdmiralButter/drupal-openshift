@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\ImageToolkit\ImageToolkitInterface.
- */
-
 namespace Drupal\Core\ImageToolkit;
 
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -57,7 +52,7 @@ interface ImageToolkitInterface extends ContainerFactoryPluginInterface, PluginI
    * @param string $source
    *   The source path of the image file.
    *
-   * @return \Drupal\Core\ImageToolkit\ImageToolkitInterface
+   * @return $this
    *   An instance of the current toolkit object.
    *
    * @throws \BadMethodCallException
@@ -174,6 +169,6 @@ interface ImageToolkitInterface extends ContainerFactoryPluginInterface, PluginI
    * @return bool
    *   TRUE if the operation was performed successfully, FALSE otherwise.
    */
-  public function apply($operation, array $arguments = array());
+  public function apply($operation, array $arguments = []);
 
 }

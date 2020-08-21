@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\StreamWrapper\PublicStream.
- */
-
 namespace Drupal\Core\StreamWrapper;
 
 use Drupal\Component\Utility\UrlHelper;
@@ -71,7 +66,7 @@ class PublicStream extends LocalStream {
   public static function baseUrl() {
     $settings_base_url = Settings::get('file_public_base_url', '');
     if ($settings_base_url) {
-       return (string) $settings_base_url;
+      return (string) $settings_base_url;
     }
     else {
       return $GLOBALS['base_url'] . '/' . static::basePath();
@@ -94,7 +89,7 @@ class PublicStream extends LocalStream {
    * $base_path = PublicStream::basePath(\Drupal::service('site.path'));
    * @endcode
    *
-   * @param \SplString $site_path
+   * @param string $site_path
    *   (optional) The site.path service parameter, which is typically the path
    *   to sites/ in a Drupal installation. This allows you to inject the site
    *   path using services from the caller. If omitted, this method will use the
@@ -104,7 +99,7 @@ class PublicStream extends LocalStream {
    * @return string
    *   The base path for public:// typically sites/default/files.
    */
-  public static function basePath(\SplString $site_path = NULL) {
+  public static function basePath($site_path = NULL) {
     if ($site_path === NULL) {
       // Find the site path. Kernel service is not always available at this
       // point, but is preferred, when available.

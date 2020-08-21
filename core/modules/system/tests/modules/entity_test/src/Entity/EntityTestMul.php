@@ -1,11 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\entity_test\Entity\EntityTestMul.
- */
-
 namespace Drupal\entity_test\Entity;
+
+use Drupal\Core\Entity\EntityTypeInterface;
 
 /**
  * Defines the test entity class.
@@ -20,7 +17,6 @@ namespace Drupal\entity_test\Entity;
  *       "default" = "Drupal\entity_test\EntityTestForm",
  *       "delete" = "Drupal\entity_test\EntityTestDeleteForm"
  *     },
- *     "translation" = "Drupal\content_translation\ContentTranslationHandler",
  *     "views_data" = "Drupal\views\EntityViewsData",
  *     "route_provider" = {
  *       "html" = "Drupal\Core\Entity\Routing\DefaultHtmlRouteProvider",
@@ -38,6 +34,8 @@ namespace Drupal\entity_test\Entity;
  *     "langcode" = "langcode",
  *   },
  *   links = {
+ *     "add-page" = "/entity_test_mul/add",
+ *     "add-form" = "/entity_test_mul/add/{type}",
  *     "canonical" = "/entity_test_mul/manage/{entity_test_mul}",
  *     "edit-form" = "/entity_test_mul/manage/{entity_test_mul}/edit",
  *     "delete-form" = "/entity_test/delete/entity_test_mul/{entity_test_mul}",
@@ -46,5 +44,12 @@ namespace Drupal\entity_test\Entity;
  * )
  */
 class EntityTestMul extends EntityTest {
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
+    return parent::baseFieldDefinitions($entity_type);
+  }
 
 }

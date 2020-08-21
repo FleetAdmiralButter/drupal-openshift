@@ -1,11 +1,9 @@
 <?php
 
 /**
- * Returns HTML for the 'theme_test' theme hook used by tests.
+ * @file
+ * Include file for test module.
  */
-function theme_theme_test($variables) {
-  return 'Theme hook implementor=theme_theme_test(). Foo=' . $variables['foo'];
-}
 
 /**
  * Preprocesses variables for theme_theme_test().

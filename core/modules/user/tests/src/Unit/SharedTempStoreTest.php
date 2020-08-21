@@ -1,34 +1,33 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\user\Unit\SharedTempStoreTest.
- */
-
 namespace Drupal\Tests\user\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\SharedTempStore;
+use Drupal\user\TempStoreException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * @coversDefaultClass \Drupal\user\SharedTempStore
  * @group user
+ * @group legacy
+ * @runTestsInSeparateProcesses
+ * @preserveGlobalState disabled
  */
 class SharedTempStoreTest extends UnitTestCase {
 
   /**
    * The mock key value expirable backend.
    *
-   * @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $keyValue;
 
   /**
    * The mock lock backend.
    *
-   * @var \Drupal\Core\Lock\LockBackendInterface|\PHPUnit_Framework_MockObject_MockObject
+   * @var \Drupal\Core\Lock\LockBackendInterface|\PHPUnit\Framework\MockObject\MockObject
    */
   protected $lock;
 
@@ -73,19 +72,19 @@ class SharedTempStoreTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    $this->keyValue = $this->getMock('Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface');
-    $this->lock = $this->getMock('Drupal\Core\Lock\LockBackendInterface');
+    $this->keyValue = $this->createMock('Drupal\Core\KeyValueStore\KeyValueStoreExpirableInterface');
+    $this->lock = $this->createMock('Drupal\Core\Lock\LockBackendInterface');
     $this->requestStack = new RequestStack();
     $request = Request::createFromGlobals();
     $this->requestStack->push($request);
 
     $this->tempStore = new SharedTempStore($this->keyValue, $this->lock, $this->owner, $this->requestStack, 604800);
 
-    $this->ownObject = (object) array(
+    $this->ownObject = (object) [
       'data' => 'test_data',
       'owner' => $this->owner,
       'updated' => (int) $request->server->get('REQUEST_TIME'),
-    );
+    ];
 
     // Clone the object but change the owner.
     $this->otherObject = clone $this->ownObject;
@@ -94,6 +93,7 @@ class SharedTempStoreTest extends UnitTestCase {
 
   /**
    * @covers ::get
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testGet() {
     $this->keyValue->expects($this->at(0))
@@ -113,6 +113,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests the getIfOwner() method.
    *
    * @covers ::getIfOwner
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testGetIfOwner() {
     $this->keyValue->expects($this->at(0))
@@ -137,7 +138,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests the set() method with no lock available.
    *
    * @covers ::set
-   * @expectedException \Drupal\user\TempStoreException
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testSetWithNoLockAvailable() {
     $this->lock->expects($this->at(0))
@@ -155,6 +156,7 @@ class SharedTempStoreTest extends UnitTestCase {
     $this->keyValue->expects($this->once())
       ->method('getCollectionName');
 
+    $this->expectException(TempStoreException::class);
     $this->tempStore->set('test', 'value');
   }
 
@@ -162,6 +164,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests a successful set() call.
    *
    * @covers ::set
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testSet() {
     $this->lock->expects($this->once())
@@ -185,6 +188,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests the setIfNotExists() methods.
    *
    * @covers ::setIfNotExists
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testSetIfNotExists() {
     $this->keyValue->expects($this->once())
@@ -199,6 +203,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests the setIfOwner() method when no key exists.
    *
    * @covers ::setIfOwner
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testSetIfOwnerWhenNotExists() {
     $this->keyValue->expects($this->once())
@@ -212,6 +217,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests the setIfOwner() method when a key already exists but no object.
    *
    * @covers ::setIfOwner
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testSetIfOwnerNoObject() {
     $this->keyValue->expects($this->once())
@@ -230,6 +236,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests the setIfOwner() method with matching and non matching owners.
    *
    * @covers ::setIfOwner
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testSetIfOwner() {
     $this->lock->expects($this->once())
@@ -254,6 +261,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests the getMetadata() method.
    *
    * @covers ::getMetadata
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testGetMetadata() {
     $this->keyValue->expects($this->at(0))
@@ -267,7 +275,7 @@ class SharedTempStoreTest extends UnitTestCase {
       ->will($this->returnValue(FALSE));
 
     $metadata = $this->tempStore->getMetadata('test');
-    $this->assertObjectHasAttribute('owner', $metadata);
+    $this->assertObjectHasAttribute('updated', $metadata);
     // Data should get removed.
     $this->assertObjectNotHasAttribute('data', $metadata);
 
@@ -278,6 +286,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests the delete() method.
    *
    * @covers ::delete
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testDelete() {
     $this->lock->expects($this->once())
@@ -301,7 +310,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests the delete() method with no lock available.
    *
    * @covers ::delete
-   * @expectedException \Drupal\user\TempStoreException
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testDeleteWithNoLockAvailable() {
     $this->lock->expects($this->at(0))
@@ -319,6 +328,7 @@ class SharedTempStoreTest extends UnitTestCase {
     $this->keyValue->expects($this->once())
       ->method('getCollectionName');
 
+    $this->expectException(TempStoreException::class);
     $this->tempStore->delete('test');
   }
 
@@ -326,6 +336,7 @@ class SharedTempStoreTest extends UnitTestCase {
    * Tests the deleteIfOwner() method.
    *
    * @covers ::deleteIfOwner
+   * @expectedDeprecation \Drupal\user\SharedTempStore is scheduled for removal in Drupal 9.0.0. Use \Drupal\Core\TempStore\SharedTempStore instead. See https://www.drupal.org/node/2935639.
    */
   public function testDeleteIfOwner() {
     $this->lock->expects($this->once())
@@ -355,4 +366,3 @@ class SharedTempStoreTest extends UnitTestCase {
   }
 
 }
-

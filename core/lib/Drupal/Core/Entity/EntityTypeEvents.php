@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Entity\EntityTypeEvents.
- */
-
 namespace Drupal\Core\Entity;
 
 /**
@@ -22,7 +17,7 @@ final class EntityTypeEvents {
    * @Event
    *
    * @see \Drupal\Core\Entity\EntityTypeEvent
-   * @see \Drupal\Core\Entity\EntityManager::onEntityTypeCreate()
+   * @see \Drupal\Core\Entity\EntityTypeListenerInterface::onEntityTypeCreate()
    * @see \Drupal\Core\Entity\EntityTypeEventSubscriberTrait
    * @see \Drupal\views\EventSubscriber\ViewsEntitySchemaSubscriber::onEntityTypeCreate()
    *
@@ -40,7 +35,7 @@ final class EntityTypeEvents {
    * @Event
    *
    * @see \Drupal\Core\Entity\EntityTypeEvent
-   * @see \Drupal\Core\Entity\EntityManager::onEntityTypeUpdate()
+   * @see \Drupal\Core\Entity\EntityTypeListenerInterface::onEntityTypeUpdate()
    * @see \Drupal\Core\Entity\EntityTypeEventSubscriberTrait
    * @see \Drupal\views\EventSubscriber\ViewsEntitySchemaSubscriber::onEntityTypeUpdate()
    *
@@ -58,7 +53,7 @@ final class EntityTypeEvents {
    * @Event
    *
    * @see \Drupal\Core\Entity\EntityTypeEvent
-   * @see \Drupal\Core\Entity\EntityManager::onEntityTypeDelete()
+   * @see \Drupal\Core\Entity\EntityTypeListenerInterface::onEntityTypeDelete()
    * @see \Drupal\Core\Entity\EntityTypeEventSubscriberTrait
    * @see \Drupal\views\EventSubscriber\ViewsEntitySchemaSubscriber::onEntityTypeDelete()
    *

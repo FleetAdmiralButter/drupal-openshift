@@ -1,14 +1,9 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\field\Unit\Plugin\migrate\process\d7\FieldInstanceSettingsTest.
- */
-
 namespace Drupal\Tests\field\Unit\Plugin\migrate\process\d7;
 
 use Drupal\field\Plugin\migrate\process\d7\FieldSettings;
-use Drupal\migrate\Entity\MigrationInterface;
+use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate\MigrateExecutableInterface;
 use Drupal\migrate\Row;
 use Drupal\Tests\migrate\Unit\MigrateTestCase;
@@ -25,10 +20,10 @@ class FieldSettingsTest extends MigrateTestCase {
    * @covers ::transform
    */
   public function testTransformImageSettings() {
-    $migration = $this->getMock(MigrationInterface::class);
+    $migration = $this->createMock(MigrationInterface::class);
     $plugin = new FieldSettings([], 'd7_field_settings', [], $migration);
 
-    $executable = $this->getMock(MigrateExecutableInterface::class);
+    $executable = $this->createMock(MigrateExecutableInterface::class);
     $row = $this->getMockBuilder(Row::class)
       ->disableOriginalConstructor()
       ->getMock();
@@ -41,7 +36,7 @@ class FieldSettingsTest extends MigrateTestCase {
       ]);
 
     $value = $plugin->transform([], $executable, $row, 'foo');
-    $this->assertInternalType('array', $value);
+    $this->assertIsArray($value);
     $this->assertSame('', $value['default_image']['uuid']);
   }
 

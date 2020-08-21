@@ -1,20 +1,18 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\StreamWrapper\StreamWrapperManager.
- */
-
 namespace Drupal\Core\StreamWrapper;
 
-use Symfony\Component\DependencyInjection\ContainerAware;
+use Symfony\Component\DependencyInjection\ContainerAwareInterface;
+use Symfony\Component\DependencyInjection\ContainerAwareTrait;
 
 /**
  * Provides a StreamWrapper manager.
  *
  * @see \Drupal\Core\StreamWrapper\StreamWrapperInterface
  */
-class StreamWrapperManager extends ContainerAware implements StreamWrapperManagerInterface {
+class StreamWrapperManager implements ContainerAwareInterface, StreamWrapperManagerInterface {
+
+  use ContainerAwareTrait;
 
   /**
    * Contains stream wrapper info.
@@ -25,7 +23,7 @@ class StreamWrapperManager extends ContainerAware implements StreamWrapperManage
    *
    * @var array
    */
-  protected $info = array();
+  protected $info = [];
 
   /**
    * Contains collected stream wrappers.
@@ -43,7 +41,7 @@ class StreamWrapperManager extends ContainerAware implements StreamWrapperManage
    *
    * @var array
    */
-  protected $wrappers = array();
+  protected $wrappers = [];
 
   /**
    * {@inheritdoc}
@@ -52,8 +50,8 @@ class StreamWrapperManager extends ContainerAware implements StreamWrapperManage
     if (isset($this->wrappers[$filter])) {
       return $this->wrappers[$filter];
     }
-    else if (isset($this->wrappers[StreamWrapperInterface::ALL])) {
-      $this->wrappers[$filter] = array();
+    elseif (isset($this->wrappers[StreamWrapperInterface::ALL])) {
+      $this->wrappers[$filter] = [];
       foreach ($this->wrappers[StreamWrapperInterface::ALL] as $scheme => $info) {
         // Bit-wise filter.
         if (($info['type'] & $filter) == $filter) {
@@ -63,7 +61,7 @@ class StreamWrapperManager extends ContainerAware implements StreamWrapperManage
       return $this->wrappers[$filter];
     }
     else {
-      return array();
+      return [];
     }
   }
 
@@ -71,7 +69,7 @@ class StreamWrapperManager extends ContainerAware implements StreamWrapperManage
    * {@inheritdoc}
    */
   public function getNames($filter = StreamWrapperInterface::ALL) {
-    $names = array();
+    $names = [];
     foreach (array_keys($this->getWrappers($filter)) as $scheme) {
       $names[$scheme] = $this->getViaScheme($scheme)->getName();
     }
@@ -83,7 +81,7 @@ class StreamWrapperManager extends ContainerAware implements StreamWrapperManage
    * {@inheritdoc}
    */
   public function getDescriptions($filter = StreamWrapperInterface::ALL) {
-    $descriptions = array();
+    $descriptions = [];
     foreach (array_keys($this->getWrappers($filter)) as $scheme) {
       $descriptions[$scheme] = $this->getViaScheme($scheme)->getDescription();
     }
@@ -102,7 +100,7 @@ class StreamWrapperManager extends ContainerAware implements StreamWrapperManage
    * {@inheritdoc}
    */
   public function getViaUri($uri) {
-    $scheme = file_uri_scheme($uri);
+    $scheme = static::getScheme($uri);
     return $this->getWrapper($scheme, $uri);
   }
 
@@ -151,11 +149,11 @@ class StreamWrapperManager extends ContainerAware implements StreamWrapperManage
    *   The scheme for which the wrapper should be registered.
    */
   public function addStreamWrapper($service_id, $class, $scheme) {
-    $this->info[$scheme] = array(
+    $this->info[$scheme] = [
       'class' => $class,
       'type' => $class::getType(),
       'service_id' => $service_id,
-    );
+    ];
   }
 
   /**
@@ -202,12 +200,83 @@ class StreamWrapperManager extends ContainerAware implements StreamWrapperManage
     }
 
     // Pre-populate the static cache with the filters most typically used.
-    $info = array('type' => $type, 'class' => $class);
+    $info = ['type' => $type, 'class' => $class];
     $this->wrappers[StreamWrapperInterface::ALL][$scheme] = $info;
 
     if (($type & StreamWrapperInterface::WRITE_VISIBLE) == StreamWrapperInterface::WRITE_VISIBLE) {
       $this->wrappers[StreamWrapperInterface::WRITE_VISIBLE][$scheme] = $info;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getTarget($uri) {
+    // Remove the scheme from the URI and remove erroneous leading or trailing,
+    // forward-slashes and backslashes.
+    $target = trim(preg_replace('/^[\w\-]+:\/\/|^data:/', '', $uri), '\/');
+
+    // If nothing was replaced, the URI doesn't have a valid scheme.
+    return $target !== $uri ? $target : FALSE;
+  }
+
+  /**
+   * Normalizes a URI by making it syntactically correct.
+   *
+   * A stream is referenced as "scheme://target".
+   *
+   * The following actions are taken:
+   * - Remove trailing slashes from target
+   * - Trim erroneous leading slashes from target. e.g. ":///" becomes "://".
+   *
+   * @param string $uri
+   *   String reference containing the URI to normalize.
+   *
+   * @return string
+   *   The normalized URI.
+   */
+  public function normalizeUri($uri) {
+    $scheme = $this->getScheme($uri);
+
+    if ($this->isValidScheme($scheme)) {
+      $target = $this->getTarget($uri);
+
+      if ($target !== FALSE) {
+        $uri = $scheme . '://' . $target;
+      }
+    }
+
+    return $uri;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getScheme($uri) {
+    if (preg_match('/^([\w\-]+):\/\/|^(data):/', $uri, $matches)) {
+      // The scheme will always be the last element in the matches array.
+      return array_pop($matches);
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isValidScheme($scheme) {
+    if (!$scheme) {
+      return FALSE;
+    }
+    return class_exists($this->getClass($scheme));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isValidUri($uri) {
+    // Assert that the URI has an allowed scheme. Bare paths are not allowed.
+    return $this->isValidScheme($this->getScheme($uri));
   }
 
 }

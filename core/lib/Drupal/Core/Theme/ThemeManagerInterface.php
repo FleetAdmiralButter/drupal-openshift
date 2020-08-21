@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Theme\ThemeManagerInterface.
- */
-
 namespace Drupal\Core\Theme;
 
 /**
@@ -63,6 +58,7 @@ interface ThemeManagerInterface {
    *
    * @param \Drupal\Core\Theme\ActiveTheme $active_theme
    *   The new active theme.
+   *
    * @return $this
    */
   public function setActiveTheme(ActiveTheme $active_theme);
@@ -70,7 +66,8 @@ interface ThemeManagerInterface {
   /**
    * Passes alterable variables to specific $theme_TYPE_alter() implementations.
    *
-   * It also invokes alter hooks for all base themes.
+   * Executes an alter hook on the current theme. It also invokes alter hooks
+   * for all base themes.
    *
    * $theme specifies the theme name of the active theme and all its base
    * themes.
@@ -91,9 +88,9 @@ interface ThemeManagerInterface {
    *   $this->alter('mymodule_data', $alterable1, $alterable2, $context);
    * @endcode
    *
-   * Note that objects are always passed by reference in PHP5. If it is
-   * absolutely required that no implementation alters a passed object in
-   * $context, then an object needs to be cloned:
+   * Note that objects are always passed by reference. If it is absolutely
+   * required that no implementation alters a passed object in $context, then an
+   * object needs to be cloned:
    * @code
    *   $context = array(
    *     'unalterable_object' => clone $object,
@@ -119,7 +116,6 @@ interface ThemeManagerInterface {
    *   (optional) An additional variable that is passed by reference. If more
    *   context needs to be provided to implementations, then this should be an
    *   associative array as described above.
-   * Execute the alter hook on the current theme.
    *
    * @see \Drupal\Core\Extension\ModuleHandlerInterface
    */

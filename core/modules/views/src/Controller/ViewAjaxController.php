@@ -1,17 +1,15 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Controller\ViewAjaxController.
- */
-
 namespace Drupal\views\Controller;
 
+use Drupal\Component\Utility\Html;
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Ajax\ReplaceCommand;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\EventSubscriber\AjaxResponseSubscriber;
+use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Path\CurrentPathStack;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\RenderContext;
@@ -92,7 +90,7 @@ class ViewAjaxController implements ContainerInjectionInterface {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('entity.manager')->getStorage('view'),
+      $container->get('entity_type.manager')->getStorage('view'),
       $container->get('views.executable'),
       $container->get('renderer'),
       $container->get('path.current'),
@@ -104,10 +102,10 @@ class ViewAjaxController implements ContainerInjectionInterface {
    * Loads and renders a view via AJAX.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
-   *  The current request object.
+   *   The current request object.
    *
    * @return \Drupal\views\Ajax\ViewAjaxResponse
-   *  The view response as ajax response.
+   *   The view response as ajax response.
    *
    * @throws \Symfony\Component\HttpKernel\Exception\NotFoundHttpException
    *   Thrown when the view was not found.
@@ -116,8 +114,8 @@ class ViewAjaxController implements ContainerInjectionInterface {
     $name = $request->request->get('view_name');
     $display_id = $request->request->get('view_display_id');
     if (isset($name) && isset($display_id)) {
-      $args = $request->request->get('view_args');
-      $args = isset($args) && $args !== '' ? explode('/', $args) : array();
+      $args = Html::decodeEntities($request->request->get('view_args'));
+      $args = isset($args) && $args !== '' ? explode('/', $args) : [];
 
       // Arguments can be empty, make sure they are passed on as NULL so that
       // argument validation is not triggered.
@@ -135,7 +133,20 @@ class ViewAjaxController implements ContainerInjectionInterface {
 
       // Remove all of this stuff from the query of the request so it doesn't
       // end up in pagers and tablesort URLs.
-      foreach (array('view_name', 'view_display_id', 'view_args', 'view_path', 'view_dom_id', 'pager_element', 'view_base_path', AjaxResponseSubscriber::AJAX_REQUEST_PARAMETER) as $key) {
+      // @todo Remove this parsing once these are removed from the request in
+      //   https://www.drupal.org/node/2504709.
+      foreach ([
+          'view_name',
+          'view_display_id',
+          'view_args',
+          'view_path',
+          'view_dom_id',
+          'pager_element',
+          'view_base_path',
+          AjaxResponseSubscriber::AJAX_REQUEST_PARAMETER,
+          FormBuilderInterface::AJAX_FORM_REQUEST,
+          MainContentViewSubscriber::WRAPPER_FORMAT,
+        ] as $key) {
         $request->query->remove($key);
         $request->request->remove($key);
       }
@@ -145,23 +156,26 @@ class ViewAjaxController implements ContainerInjectionInterface {
         throw new NotFoundHttpException();
       }
       $view = $this->executableFactory->get($entity);
-      if ($view && $view->access($display_id)) {
+      if ($view && $view->access($display_id) && $view->setDisplay($display_id) && $view->display_handler->ajaxEnabled()) {
         $response->setView($view);
         // Fix the current path for paging.
         if (!empty($path)) {
-          $this->currentPath->setPath('/' . $path, $request);
+          $this->currentPath->setPath('/' . ltrim($path, '/'), $request);
         }
 
         // Add all POST data, because AJAX is always a post and many things,
         // such as tablesorts, exposed filters and paging assume GET.
         $request_all = $request->request->all();
+        unset($request_all['ajax_page_state']);
         $query_all = $request->query->all();
         $request->query->replace($request_all + $query_all);
 
         // Overwrite the destination.
         // @see the redirect.destination service.
         $origin_destination = $path;
-        $query = UrlHelper::buildQuery($request->query->all());
+
+        $used_query_parameters = $request->query->all();
+        $query = UrlHelper::buildQuery($used_query_parameters);
         if ($query != '') {
           $origin_destination .= '?' . $query;
         }
@@ -176,7 +190,7 @@ class ViewAjaxController implements ContainerInjectionInterface {
         $view->dom_id = $dom_id;
 
         $context = new RenderContext();
-        $preview = $this->renderer->executeInRenderContext($context, function() use ($view, $display_id, $args) {
+        $preview = $this->renderer->executeInRenderContext($context, function () use ($view, $display_id, $args) {
           return $view->preview($display_id, $args);
         });
         if (!$context->isEmpty()) {

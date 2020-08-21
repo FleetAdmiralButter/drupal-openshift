@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\system\Kernel\Scripts\DbToolsApplicationTest.
- */
-
 namespace Drupal\Tests\system\Kernel\Scripts;
 
 use Drupal\Core\Command\DbToolsApplication;
@@ -27,6 +22,7 @@ class DbToolsApplicationTest extends KernelTestBase {
     $application = new DbToolsApplication();
     $command = $application->find('dump');
     $this->assertInstanceOf('\Drupal\Core\Command\DbDumpCommand', $command);
+    $this->assertSame(\Drupal::VERSION, $application->getVersion());
   }
 
   /**

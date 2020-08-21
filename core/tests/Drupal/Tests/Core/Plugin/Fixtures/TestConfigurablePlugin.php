@@ -1,16 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\Core\Plugin\Fixtures\TestConfigurablePlugin.
- */
-
 namespace Drupal\Tests\Core\Plugin\Fixtures;
 
-use Drupal\Component\Plugin\ConfigurablePluginInterface;
+use Drupal\Component\Plugin\ConfigurableInterface;
+use Drupal\Component\Plugin\DependentPluginInterface;
 use Drupal\Component\Plugin\PluginBase;
 
-class TestConfigurablePlugin extends PluginBase implements ConfigurablePluginInterface {
+class TestConfigurablePlugin extends PluginBase implements ConfigurableInterface, DependentPluginInterface {
 
   /**
    * {@inheritdoc}
@@ -30,14 +26,14 @@ class TestConfigurablePlugin extends PluginBase implements ConfigurablePluginInt
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return array();
+    return [];
   }
 
   /**
    * {@inheritdoc}
    */
   public function calculateDependencies() {
-    return array();
+    return [];
   }
 
 }

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\image\Plugin\migrate\destination\EntityImageStyle.
- */
-
 namespace Drupal\image\Plugin\migrate\destination;
 
 use Drupal\Component\Plugin\Exception\PluginNotFoundException;
@@ -35,7 +30,7 @@ class EntityImageStyle extends EntityConfigBase {
       $row->setDestinationProperty('effects', []);
     }
 
-    /** @var \Drupal\Image\Entity\ImageStyle $style */
+    /** @var \Drupal\image\Entity\ImageStyle $style */
     $style = $this->getEntity($row, $old_destination_id_values);
 
     // Iterate the effects array so each effect plugin can be initialized.
@@ -51,7 +46,7 @@ class EntityImageStyle extends EntityConfigBase {
 
     $style->save();
 
-    return array($style->id());
+    return [$style->id()];
   }
 
 }

@@ -1,16 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\KernelTests\Config\DefaultConfigTest.
- */
-
 namespace Drupal\KernelTests\Config;
 
+use Drupal\Core\Config\Entity\ConfigEntityDependency;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\KernelTests\AssertConfigTrait;
+use Drupal\KernelTests\FileSystemModuleDiscoveryDataProviderTrait;
 use Drupal\KernelTests\KernelTestBase;
 
 /**
@@ -21,6 +18,7 @@ use Drupal\KernelTests\KernelTestBase;
 class DefaultConfigTest extends KernelTestBase {
 
   use AssertConfigTrait;
+  use FileSystemModuleDiscoveryDataProviderTrait;
 
   /**
    * {@inheritdoc}
@@ -30,88 +28,108 @@ class DefaultConfigTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['system', 'user'];
+  public static $modules = ['system', 'user', 'path_alias'];
 
   /**
-   * {@inheritdoc}
+   * The following config entries are changed on module install.
+   *
+   * Comparing them does not make sense.
+   *
+   * @todo Figure out why simpletest.settings is not installed.
+   *
+   * @var array
    */
-  protected function setUp() {
-    parent::setUp();
-
-    // @todo ModuleInstaller calls system_rebuild_module_data which is part of
-    //   system.module, see https://www.drupal.org/node/2208429.
-    include_once $this->root . '/core/modules/system/system.module';
-
-    // Set up the state values so we know where to find the files when running
-    // drupal_get_filename().
-    // @todo Remove as part of https://www.drupal.org/node/2186491
-    system_rebuild_module_data();
-
-    $this->installSchema('system', 'router');
-  }
+  public static $skippedConfig = [
+    'locale.settings' => ['path: '],
+    'syslog.settings' => ['facility: '],
+    'simpletest.settings' => TRUE,
+  ];
 
   /**
    * Tests if installed config is equal to the exported config.
    *
-   * @dataProvider providerTestModuleConfig
+   * @dataProvider coreModuleListDataProvider
    */
   public function testModuleConfig($module) {
-    /** @var \Drupal\Core\Extension\ModuleInstallerInterface $module_installer */
-    $module_installer = $this->container->get('module_installer');
-    /** @var \Drupal\Core\Config\StorageInterface $active_config_storage */
-    $active_config_storage = $this->container->get('config.storage');
-    /** @var \Drupal\Core\Config\ConfigManagerInterface $config_manager */
-    $config_manager = $this->container->get('config.manager');
-
-    $module_installer->install([$module]);
-
     // System and user are required in order to be able to install some of the
     // other modules. Therefore they are put into static::$modules, which though
-    // doesn't install config files, so import those config files explicitly.
-    switch ($module) {
-      case 'system':
-      case 'user':
-        $this->installConfig([$module]);
-        break;
+    // doesn't install config files, so import those config files explicitly. Do
+    // this for all tests in case optional configuration depends on it.
+    $this->installConfig(['system', 'user']);
+
+    $module_path = drupal_get_path('module', $module) . '/';
+
+    /** @var \Drupal\Core\Extension\ModuleInstallerInterface $module_installer */
+    $module_installer = $this->container->get('module_installer');
+
+    $module_config_storage = new FileStorage($module_path . InstallStorage::CONFIG_INSTALL_DIRECTORY, StorageInterface::DEFAULT_COLLECTION);
+    $optional_config_storage = new FileStorage($module_path . InstallStorage::CONFIG_OPTIONAL_DIRECTORY, StorageInterface::DEFAULT_COLLECTION);
+
+    if (empty($optional_config_storage->listAll()) && empty($module_config_storage->listAll())) {
+      $this->markTestSkipped("$module has no configuration to test");
     }
 
-    $default_install_path = drupal_get_path('module', $module) . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
-    $module_config_storage = new FileStorage($default_install_path, StorageInterface::DEFAULT_COLLECTION);
-
-    // The following config entries are changed on module install, so compare
-    // them doesn't make sense.
-    $skipped_config = [];
-    $skipped_config['locale.settings'][] = 'path: ';
-    $skipped_config['syslog.settings'][] = 'facility: ';
-    // @todo Figure out why simpletest.settings is not installed.
-    $skipped_config['simpletest.settings'] = TRUE;
-
-    // Compare the installed config with the one in the module directory.
-    foreach ($module_config_storage->listAll() as $config_name) {
-      $result = $config_manager->diff($module_config_storage, $active_config_storage, $config_name);
-      $this->assertConfigDiff($result, $config_name, $skipped_config);
+    // Work out any additional modules and themes that need installing to create
+    // an optional config.
+    $modules_to_install = [$module];
+    $themes_to_install = [];
+    foreach ($optional_config_storage->listAll() as $config_name) {
+      $data = $optional_config_storage->read($config_name);
+      $dependency = new ConfigEntityDependency($config_name, $data);
+      $modules_to_install = array_merge($modules_to_install, $dependency->getDependencies('module'));
+      $themes_to_install = array_merge($themes_to_install, $dependency->getDependencies('theme'));
     }
+    // Remove core because that cannot be installed.
+    $modules_to_install = array_diff(array_unique($modules_to_install), ['core']);
+    $module_installer->install($modules_to_install);
+    $this->container->get('theme_installer')->install(array_unique($themes_to_install));
+
+    // Test configuration in the module's config/install directory.
+    $this->doTestsOnConfigStorage($module_config_storage, $module);
+
+    // Test configuration in the module's config/optional directory.
+    $this->doTestsOnConfigStorage($optional_config_storage, $module);
   }
 
   /**
-   * Test data provider for ::testModuleConfig().
+   * Tests that default config matches the installed config.
    *
-   * @return array
-   *   An array of module names to test.
+   * @param \Drupal\Core\Config\StorageInterface $default_config_storage
+   *   The default config storage to test.
    */
-  public function providerTestModuleConfig() {
-    $module_dirs = array_keys(iterator_to_array(new \FilesystemIterator(__DIR__ . '/../../../../modules/')));
-    $module_names = array_map(function($path) {
-      return str_replace(__DIR__ . '/../../../../modules/', '', $path);
-    }, $module_dirs);
-    $modules_keyed = array_combine($module_names, $module_names);
+  protected function doTestsOnConfigStorage(StorageInterface $default_config_storage, $module) {
+    /** @var \Drupal\Core\Config\ConfigManagerInterface $config_manager */
+    $config_manager = $this->container->get('config.manager');
 
-    $data = array_map(function ($module) {
-      return [$module];
-    }, $modules_keyed);
+    // Just connect directly to the config table so we don't need to worry about
+    // the cache layer.
+    $active_config_storage = $this->container->get('config.storage');
 
-    return $data;
+    foreach ($default_config_storage->listAll() as $config_name) {
+      if ($active_config_storage->exists($config_name)) {
+        // If it is a config entity re-save it. This ensures that any
+        // recalculation of dependencies does not cause config change.
+        if ($entity_type = $config_manager->getEntityTypeIdByName($config_name)) {
+          $entity_storage = $config_manager
+            ->getEntityTypeManager()
+            ->getStorage($entity_type);
+          $id = $entity_storage->getIDFromConfigName($config_name, $entity_storage->getEntityType()
+            ->getConfigPrefix());
+          $entity_storage->load($id)->calculateDependencies()->save();
+        }
+        $result = $config_manager->diff($default_config_storage, $active_config_storage, $config_name);
+        $this->assertConfigDiff($result, $config_name, static::$skippedConfig);
+        // The method call above will throw an exception if the configuration is
+        // different.
+        $this->pass("$config_name has no differences");
+      }
+      else {
+        $info = $this->container->get('extension.list.module')->getExtensionInfo($module);
+        if (!isset($info['package']) || $info['package'] !== 'Core (Experimental)') {
+          $this->fail("$config_name provided by $module does not exist after installing all dependencies");
+        }
+      }
+    }
   }
 
 }
-

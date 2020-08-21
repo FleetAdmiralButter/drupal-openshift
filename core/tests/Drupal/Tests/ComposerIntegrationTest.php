@@ -1,11 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Tests\ComposerIntegrationTest.
- */
-
 namespace Drupal\Tests;
+
+use Drupal\Tests\Composer\ComposerIntegrationTrait;
 
 /**
  * Tests Composer integration.
@@ -14,58 +11,68 @@ namespace Drupal\Tests;
  */
 class ComposerIntegrationTest extends UnitTestCase {
 
+  use ComposerIntegrationTrait;
+
   /**
-   * Gets human-readable JSON error messages.
-   *
-   * @return string[]
-   *   Keys are JSON_ERROR_* constants.
+   * Tests composer.lock content-hash.
    */
-  protected function getErrorMessages() {
-    $messages = [
-      0 => 'No errors found',
-      JSON_ERROR_DEPTH => 'The maximum stack depth has been exceeded',
-      JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
-      JSON_ERROR_CTRL_CHAR => 'Control character error, possibly incorrectly encoded',
-      JSON_ERROR_SYNTAX => 'Syntax error',
-      JSON_ERROR_UTF8 => 'Malformed UTF-8 characters, possibly incorrectly encoded',
-    ];
+  public function testComposerLockHash() {
+    $content_hash = self::getContentHash(file_get_contents($this->root . '/composer.json'));
+    $lock = json_decode(file_get_contents($this->root . '/composer.lock'), TRUE);
+    $this->assertSame($content_hash, $lock['content-hash']);
 
-    if (version_compare(phpversion(), '5.5.0', '>=')) {
-      $messages[JSON_ERROR_RECURSION] = 'One or more recursive references in the value to be encoded';
-      $messages[JSON_ERROR_INF_OR_NAN] = 'One or more NAN or INF values in the value to be encoded';
-      $messages[JSON_ERROR_UNSUPPORTED_TYPE] = 'A value of a type that cannot be encoded was given';
+    // @see \Composer\Repository\PathRepository::initialize()
+    $core_lock_file_hash = '';
+    $options = [];
+    foreach ($lock['packages'] as $package) {
+      if ($package['name'] === 'drupal/core') {
+        $core_lock_file_hash = $package['dist']['reference'];
+        $options = $package['transport-options'] ?? [];
+        break;
+      }
     }
-
-    return $messages;
+    $core_content_hash = sha1(file_get_contents($this->root . '/core/composer.json') . serialize($options));
+    $this->assertSame($core_content_hash, $core_lock_file_hash);
   }
 
   /**
-   * Gets the paths to the folders that contain the Composer integration.
+   * Tests composer.json versions.
    *
-   * @return string[]
-   *   The paths.
+   * @param string $path
+   *   Path to a composer.json to test.
+   *
+   * @dataProvider providerTestComposerJson
    */
-  protected function getPaths() {
-    return [
-      $this->root,
-      $this->root . '/core',
-      $this->root . '/core/lib/Drupal/Component/Gettext',
-      $this->root . '/core/lib/Drupal/Component/Plugin',
-      $this->root . '/core/lib/Drupal/Component/ProxyBuilder',
-      $this->root . '/core/lib/Drupal/Component/Utility',
-    ];
+  public function testComposerTilde($path) {
+    $content = json_decode(file_get_contents($path), TRUE);
+    $composer_keys = array_intersect(['require', 'require-dev'], array_keys($content));
+    if (empty($composer_keys)) {
+      $this->markTestSkipped("$path has no keys to test");
+    }
+    foreach ($composer_keys as $composer_key) {
+      foreach ($content[$composer_key] as $dependency => $version) {
+        // We allow tildes if the dependency is a Symfony component.
+        // @see https://www.drupal.org/node/2887000
+        if (strpos($dependency, 'symfony/') === 0) {
+          continue;
+        }
+        $this->assertStringNotContainsString('~', $version, "Dependency $dependency in $path contains a tilde, use a caret.");
+      }
+    }
   }
 
   /**
-   * Tests composer.json.
+   * Data provider for all the composer.json provided by Drupal core.
+   *
+   * @return array
    */
-  public function testComposerJson() {
-    foreach ($this->getPaths() as $path) {
-      $json = file_get_contents($path . '/composer.json');
-
-      $result = json_decode($json);
-      $this->assertNotNull($result, $this->getErrorMessages()[json_last_error()]);
+  public function providerTestComposerJson() {
+    $data = [];
+    $composer_json_finder = $this->getComposerJsonFinder(realpath(__DIR__ . '/../../../../'));
+    foreach ($composer_json_finder->getIterator() as $composer_json) {
+      $data[] = [$composer_json->getPathname()];
     }
+    return $data;
   }
 
   /**
@@ -104,5 +111,126 @@ class ComposerIntegrationTest extends UnitTestCase {
       );
     }
   }
+
+  /**
+   * Data provider for the scaffold files test for Drupal core.
+   *
+   * @return array
+   */
+  public function providerTestExpectedScaffoldFiles() {
+    return [
+      ['.editorconfig', 'assets/scaffold/files/editorconfig', '[project-root]'],
+      ['.gitattributes', 'assets/scaffold/files/gitattributes', '[project-root]'],
+      ['.csslintrc', 'assets/scaffold/files/csslintrc'],
+      ['.eslintignore', 'assets/scaffold/files/eslintignore'],
+      ['.eslintrc.json', 'assets/scaffold/files/eslintrc.json'],
+      ['.ht.router.php', 'assets/scaffold/files/ht.router.php'],
+      ['.htaccess', 'assets/scaffold/files/htaccess'],
+      ['example.gitignore', 'assets/scaffold/files/example.gitignore'],
+      ['index.php', 'assets/scaffold/files/index.php'],
+      ['INSTALL.txt', 'assets/scaffold/files/drupal.INSTALL.txt'],
+      ['README.txt', 'assets/scaffold/files/drupal.README.txt'],
+      ['robots.txt', 'assets/scaffold/files/robots.txt'],
+      ['update.php', 'assets/scaffold/files/update.php'],
+      ['web.config', 'assets/scaffold/files/web.config'],
+      ['sites/README.txt', 'assets/scaffold/files/sites.README.txt'],
+      ['sites/development.services.yml', 'assets/scaffold/files/development.services.yml'],
+      ['sites/example.settings.local.php', 'assets/scaffold/files/example.settings.local.php'],
+      ['sites/example.sites.php', 'assets/scaffold/files/example.sites.php'],
+      ['sites/default/default.services.yml', 'assets/scaffold/files/default.services.yml'],
+      ['sites/default/default.settings.php', 'assets/scaffold/files/default.settings.php'],
+      ['modules/README.txt', 'assets/scaffold/files/modules.README.txt'],
+      ['profiles/README.txt', 'assets/scaffold/files/profiles.README.txt'],
+      ['themes/README.txt', 'assets/scaffold/files/themes.README.txt'],
+    ];
+  }
+
+  /**
+   * Tests core's composer.json extra drupal-scaffold file-mappings section.
+   *
+   * Verify that every file listed in file-mappings exists in its destination
+   * path (mapping key) and also at its source path (mapping value), and that
+   * both of these files have exactly the same content.
+   *
+   * In Drupal 9, the files at the destination path will be removed. For the
+   * remainder of the Drupal 8 development cycle, these files will remain in
+   * order to maintain backwards compatibility with sites based on the template
+   * project drupal-composer/drupal-project.
+   *
+   * See https://www.drupal.org/project/drupal/issues/3075954
+   *
+   * @param string $destRelPath
+   *   Path to scaffold file destination location
+   * @param string $sourceRelPath
+   *   Path to scaffold file source location
+   * @param string $expectedDestination
+   *   Named location to the destination path of the scaffold file
+   *
+   * @dataProvider providerTestExpectedScaffoldFiles
+   */
+  public function testExpectedScaffoldFiles($destRelPath, $sourceRelPath, $expectedDestination = '[web-root]') {
+    // Grab the 'file-mapping' section of the core composer.json file.
+    $json = json_decode(file_get_contents($this->root . '/core/composer.json'));
+    $scaffold_file_mapping = (array) $json->extra->{'drupal-scaffold'}->{'file-mapping'};
+
+    // Assert that the 'file-mapping' section has the expected entry.
+    $this->assertArrayHasKey("$expectedDestination/$destRelPath", $scaffold_file_mapping);
+    $this->assertEquals($sourceRelPath, $scaffold_file_mapping["$expectedDestination/$destRelPath"]);
+
+    // Assert that the source file exists.
+    $this->assertFileExists($this->root . '/core/' . $sourceRelPath);
+
+    // Assert that the destination file exists and has the same contents as
+    // the source file. Note that in Drupal 9, the destination file will be
+    // removed.
+    $this->assertFileExists($this->root . '/' . $destRelPath);
+    $this->assertFileEquals($this->root . '/core/' . $sourceRelPath, $this->root . '/' . $destRelPath, 'Scaffold source and destination files must have the same contents.');
+  }
+
+  // @codingStandardsIgnoreStart
+  /**
+   * The following method is copied from \Composer\Package\Locker.
+   *
+   * @see https://github.com/composer/composer
+   */
+  /**
+   * Returns the md5 hash of the sorted content of the composer file.
+   *
+   * @param string $composerFileContents The contents of the composer file.
+   *
+   * @return string
+   */
+  protected static function getContentHash($composerFileContents)
+  {
+    $content = json_decode($composerFileContents, true);
+
+    $relevantKeys = array(
+      'name',
+      'version',
+      'require',
+      'require-dev',
+      'conflict',
+      'replace',
+      'provide',
+      'minimum-stability',
+      'prefer-stable',
+      'repositories',
+      'extra',
+    );
+
+    $relevantContent = array();
+
+    foreach (array_intersect($relevantKeys, array_keys($content)) as $key) {
+      $relevantContent[$key] = $content[$key];
+    }
+    if (isset($content['config']['platform'])) {
+      $relevantContent['config']['platform'] = $content['config']['platform'];
+    }
+
+    ksort($relevantContent);
+
+    return md5(json_encode($relevantContent));
+  }
+  // @codingStandardsIgnoreEnd
 
 }

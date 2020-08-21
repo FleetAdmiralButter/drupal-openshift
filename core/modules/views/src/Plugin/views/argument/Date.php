@@ -1,12 +1,8 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\views\Plugin\views\argument\Date.
- */
-
 namespace Drupal\views\Plugin\views\argument;
 
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -14,7 +10,7 @@ use Drupal\node\NodeInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Abstract argument handler for dates.
+ * Argument handler for dates.
  *
  * Adds an option to set a default argument based on the current date.
  *
@@ -45,7 +41,7 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
    */
   protected $argFormat = 'Y-m-d';
 
-  var $option_name = 'default_argument_date';
+  public $option_name = 'default_argument_date';
 
   /**
    * The route match.
@@ -53,6 +49,13 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
    * @var \Drupal\Core\Routing\RouteMatchInterface
    */
   protected $routeMatch;
+
+  /**
+   * The date formatter service.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
+   */
+  protected $dateFormatter;
 
   /**
    * Constructs a new Date instance.
@@ -63,14 +66,16 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
    *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
    *   The plugin implementation definition.
-   *
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The route match.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   *   The date formatter service.
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, RouteMatchInterface $route_match) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, RouteMatchInterface $route_match, DateFormatterInterface $date_formatter) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
 
     $this->routeMatch = $route_match;
+    $this->dateFormatter = $date_formatter;
   }
 
   /**
@@ -81,7 +86,8 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('current_route_match')
+      $container->get('current_route_match'),
+      $container->get('date.formatter')
     );
   }
 
@@ -90,9 +96,9 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
    */
   public function defaultArgumentForm(&$form, FormStateInterface $form_state) {
     parent::defaultArgumentForm($form, $form_state);
-    $form['default_argument_type']['#options'] += array('date' => $this->t('Current date'));
-    $form['default_argument_type']['#options'] += array('node_created' => $this->t("Current node's creation time"));
-    $form['default_argument_type']['#options'] += array('node_changed' => $this->t("Current node's update time"));
+    $form['default_argument_type']['#options'] += ['date' => $this->t('Current date')];
+    $form['default_argument_type']['#options'] += ['node_created' => $this->t("Current node's creation time")];
+    $form['default_argument_type']['#options'] += ['node_changed' => $this->t("Current node's update time")];
   }
 
   /**
@@ -103,7 +109,7 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
     if (!$raw && $this->options['default_argument_type'] == 'date') {
       return date($this->argFormat, REQUEST_TIME);
     }
-    elseif (!$raw && in_array($this->options['default_argument_type'], array('node_created', 'node_changed'))) {
+    elseif (!$raw && in_array($this->options['default_argument_type'], ['node_created', 'node_changed'])) {
       $node = $this->routeMatch->getParameter('node');
 
       if (!($node instanceof NodeInterface)) {
@@ -124,7 +130,7 @@ class Date extends Formula implements ContainerFactoryPluginInterface {
    * {@inheritdoc}
    */
   public function getSortName() {
-    return $this->t('Date', array(), array('context' => 'Sort order'));
+    return $this->t('Date', [], ['context' => 'Sort order']);
   }
 
   /**

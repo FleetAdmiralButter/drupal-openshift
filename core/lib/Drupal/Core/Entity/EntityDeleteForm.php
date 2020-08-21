@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\Core\Entity\EntityDeleteForm.
- */
-
 namespace Drupal\Core\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
@@ -14,6 +9,8 @@ use Drupal\Core\Form\FormStateInterface;
  * Provides a generic base class for an entity deletion form.
  *
  * @ingroup entity_api
+ *
+ * @internal
  */
 class EntityDeleteForm extends EntityConfirmFormBase {
 
@@ -34,7 +31,7 @@ class EntityDeleteForm extends EntityConfirmFormBase {
     if (!($entity instanceof ConfigEntityInterface)) {
       return $form;
     }
-    $this->addDependencyListsToForm($form, $entity->getConfigDependencyKey(), $this->getConfigNamesToDelete($entity), $this->getConfigManager(), $this->entityManager);
+    $this->addDependencyListsToForm($form, $entity->getConfigDependencyKey(), $this->getConfigNamesToDelete($entity), $this->getConfigManager(), $this->entityTypeManager);
 
     return $form;
   }

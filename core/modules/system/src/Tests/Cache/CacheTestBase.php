@@ -1,16 +1,18 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\system\Tests\Cache\CacheTestBase.
- */
-
 namespace Drupal\system\Tests\Cache;
+
+@trigger_error(__NAMESPACE__ . '\CacheTestBase is deprecated for removal before Drupal 9.0.0. Use \Drupal\Tests\system\Functional\Cache\CacheTestBase instead. See https://www.drupal.org/node/2999939', E_USER_DEPRECATED);
 
 use Drupal\simpletest\WebTestBase;
 
 /**
  * Provides helper methods for cache tests.
+ *
+ * @deprecated in drupal:8.?.? and is removed from drupal:9.0.0.
+ *   Use \Drupal\Tests\system\Functional\Cache\CacheTestBase instead.
+ *
+ * @see https://www.drupal.org/node/2999939
  */
 abstract class CacheTestBase extends WebTestBase {
 
@@ -27,6 +29,7 @@ abstract class CacheTestBase extends WebTestBase {
    *   The variable the cache should contain.
    * @param $bin
    *   The bin the cache item was stored in.
+   *
    * @return
    *   TRUE on pass, FALSE on fail.
    */
@@ -76,7 +79,7 @@ abstract class CacheTestBase extends WebTestBase {
    * @param $bin
    *   The bin the cache item was stored in.
    */
-  function assertCacheRemoved($message, $cid = NULL, $bin = NULL) {
+  public function assertCacheRemoved($message, $cid = NULL, $bin = NULL) {
     if ($bin == NULL) {
       $bin = $this->defaultBin;
     }
@@ -87,4 +90,5 @@ abstract class CacheTestBase extends WebTestBase {
     $cached = \Drupal::cache($bin)->get($cid);
     $this->assertFalse($cached, $message);
   }
+
 }
