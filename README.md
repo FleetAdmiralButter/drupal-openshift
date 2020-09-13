@@ -1,6 +1,6 @@
-# Drupal 8.9.2 on OpenShift QuickStart
+# Drupal 8.9.5 on OpenShift QuickStart
 
-Drupal 8.9.2 LTS project ready to be deployed on OpenShift.\
+Drupal 8.9 LTS project ready to be deployed on OpenShift.\
 S2I deploys the application with PHP 7.3 using the following image: https://github.com/sclorg/s2i-php-container/tree/master/7.3
 Forks, issues, pull requests, and any other feedback welcome.
 
