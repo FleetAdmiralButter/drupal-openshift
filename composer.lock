@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "589ef003f3893d59c80b9d463cad4bdc",
+    "content-hash": "4b0265ec2c57c41788cdea18d74d737c",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -1522,6 +1522,50 @@
             ],
             "description": "Locked core dependencies; require this project INSTEAD OF drupal/core.",
             "time": "2021-01-19T23:11:00+00:00"
+        },
+        {
+            "name": "drupal/drupal_fence",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/drupal_fence.git",
+                "reference": "1.0.1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/drupal_fence-1.0.1.zip",
+                "reference": "1.0.1",
+                "shasum": "d7891d916d7504a066ce99354d0ffa0061d18070"
+            },
+            "require": {
+                "drupal/core": "~8.0"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "1.0.1",
+                    "datestamp": "1615700035",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "FleetAdmiralButter",
+                    "homepage": "https://www.drupal.org/user/3601431"
+                }
+            ],
+            "description": "Blocks clients which spam known malicious requests",
+            "homepage": "https://www.drupal.org/project/drupal_fence",
+            "support": {
+                "source": "https://git.drupalcode.org/project/drupal_fence"
+            }
         },
         {
             "name": "drupal/field_group",
